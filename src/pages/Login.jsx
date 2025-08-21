@@ -3,9 +3,16 @@ import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import loginImg from '../assets/loginImg.svg';
 import Flex from '../layouts/Flex';
 import Logo from '../layouts/Logo';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import toast, { Toaster } from 'react-hot-toast';
+
+  import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { useDispatch } from 'react-redux';
+import { setUser } from '../features/userInfoSlice';
 
 const Login = () => {
+  const dispatch=useDispatch()
+  const navigate= useNavigate()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -20,14 +27,38 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Login data:', formData);
-    // Handle login logic (admin/member) here
-  };
+const handleSubmit = (e) => {
+  e.preventDefault();
+
+  console.log("Login data:", formData);
+
+  if (!formData.email || !formData.password) {
+    toast.error("Please Fill all Fields")
+}else{
+
+const auth = getAuth();
+signInWithEmailAndPassword(auth, formData.email, formData.password)
+  .then((userCredential) => {
+    const user = userCredential.user;
+    setTimeout(() => {
+      navigate("/")
+    }, 1000);
+    dispatch(setUser(user))
+    toast.success("Login Successful")
+  })
+  .catch((error) => {
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    toast.error(errorMessage)
+  })}
+
+}
+
 
   return (
     <div className='w-full h-screen'>
+      
+      <Toaster position="top-right" reverseOrder={false} />
       <Flex className='h-full'>
         {/* Left Side - Image */}
         <div className='w-1/2 h-full flex items-center justify-center bg-gray-100'>
