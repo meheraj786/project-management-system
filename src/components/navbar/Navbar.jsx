@@ -29,6 +29,7 @@ const Navbar = () => {
       .then(() => {
         dispatch(setUser(null))
         localStorage.removeItem("userInfo")
+        localStorage.removeItem("currentUser")
       })
       .catch((error) => {
         // An error happened.
@@ -105,14 +106,14 @@ console.log(currentUser, "currentUser");
             >
               <div className="flex flex-col items-end">
                 <span className="text-sm font-medium text-gray-800 hidden sm:block">
-                  {currentUser?.name}
+                  {user?.displayName}
                 </span>
                 <span className="text-xs text-gray-500 hidden sm:block">
                   {currentUser?.companyName}
                 </span>
               </div>
               <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-red-500 rounded-full flex items-center justify-center">
-                <img src={currentUser?.profileImage} className="rounded-full" alt="" />
+                <img src={user?.photoURL} className="rounded-full" alt="" />
               </div>
               <ChevronDown
                 className={`h-4 w-4 text-gray-400 transition-transform ${
@@ -127,7 +128,7 @@ console.log(currentUser, "currentUser");
                 <div className="px-4 py-3 border-b border-gray-100">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-red-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium">A</span>
+                      <img className="rounded-full" src={user?.photoURL}/>
                     </div>
                     <div>
                       <p className="font-medium text-gray-800">

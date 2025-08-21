@@ -89,7 +89,7 @@ const ProjectCreationModal = ({ isOpen, onClose }) => {
   // if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-lg flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -250,7 +250,7 @@ const ProjectCreationModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* Team Members */}
-          {/* <div>
+          <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Team Members
             </label>
@@ -288,7 +288,7 @@ const ProjectCreationModal = ({ isOpen, onClose }) => {
                 </div>
               )}
             </div>
-          </div> */}
+          </div>
 
           {/* Tags */}
           {/* <div>

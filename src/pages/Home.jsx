@@ -209,7 +209,7 @@ const Home = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {
-          projectModal && <ProjectCreationModal/>
+          projectModal && <ProjectCreationModal onClose={()=>setProjectModal(false)}/>
         }
         
         
@@ -226,7 +226,7 @@ const Home = () => {
               <span className="text-sm text-gray-700">Today</span>
             </button>
             
-            <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2">
+            <button onClick={()=>setProjectModal(true)} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2">
               <Plus className="h-4 w-4" />
               <span>New Project</span>
             </button>

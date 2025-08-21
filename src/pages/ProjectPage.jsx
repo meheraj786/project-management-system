@@ -221,9 +221,9 @@ const ProjectProfile = () => {
           </div>
           
           <div className="flex items-center space-x-3">
-            <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors">
-              <Share2 className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-700">Share</span>
+            <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg bg-primary hover:bg-primary/70 transition-colors">
+              <Plus className="h-4 w-4 text-white" />
+              <span className="text-sm text-white">Add Task</span>
             </button>
             
             <button className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center hover:bg-purple-700 transition-colors">

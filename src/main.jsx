@@ -15,6 +15,8 @@ import { store } from "./store/store.js";
 import { Provider } from "react-redux";
 import UserRoute from "./protectedRoutes/UserRoute.jsx";
 import CurrentUserProvider from "./context/CurrentUserProvider.jsx";
+import Members from "./pages/Members.jsx";
+
 
 const router = createBrowserRouter([
   {
@@ -31,6 +33,10 @@ const router = createBrowserRouter([
           {
             path: '/projects',
             element: <ProjectProfile />,
+          },
+          {
+            path: '/members',
+            element: <Members />,
           },
         ],
       },
