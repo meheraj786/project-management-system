@@ -1,20 +1,52 @@
 import React, { useState } from 'react';
 import { X, User, Mail, Briefcase, Phone, MapPin, Calendar, Lock, Eye, EyeOff, Info } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { createUserWithEmailAndPassword, getAuth, updateProfile } from 'firebase/auth';
+import { getDatabase, ref, set } from 'firebase/database';
+import { useSelector } from 'react-redux';
 
 export const AddMemberModal = ({ onClose, onAddMember }) => {
+  
+  const data = useSelector((state) => state.userInfo.value);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
+    profileImage: '',
     role: '',
     phone: '',
     department: '',
     joinDate: new Date().toISOString().split('T')[0],
-    avatar: ''
   });
+  const db= getDatabase()
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+
+    const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    const data = new FormData();
+
+    data.append("file", file);
+    data.append("upload_preset", "e-com app with firebase");
+    data.append("cloud_name", "dlrycnxnh");
+
+    const res = await fetch(
+      "https://api.cloudinary.com/v1_1/dlrycnxnh/image/upload",
+      {
+        method: "POST",
+        body: data,
+      }
+    );
+
+    const result = await res.json();
+
+    setFormData((prev) => ({
+      ...prev,
+      profileImage: result.secure_url,
+    }));
+    setImagePreview(result.secure_url);
+  };
 
   const departments = [
     'Engineering',
@@ -94,6 +126,36 @@ export const AddMemberModal = ({ onClose, onAddMember }) => {
         color: randomColor,
         status: 'Active'
       };
+
+            const auth = getAuth();
+      createUserWithEmailAndPassword(auth, formData.email, formData.password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          updateProfile(auth.currentUser, {
+            displayName: `${formData.firstName} ${formData.lastName}`,
+            photoURL: formData.profileImage,
+            businessType: formData.businessType,
+            role: formData.role,
+            companyName: formData.companyName,
+          }).then(() => {
+            set(ref(db, "users/" + user.uid), {
+              name: `${formData.firstName} ${formData.lastName}`,
+              email: formData.email,
+              profileImage: formData.profileImage,
+              businessType: formData.businessType,
+              role: formData.role,
+              companyName: formData.companyName,
+              adminId: data?.uid
+            });
+            onClose()
+            toast.success("Member Successfully Created!");
+          });
+        })
+        .catch((error) => {
+          const errorMessage = error.message;
+          toast.error(errorMessage);
+          // ..
+        });
       
       onAddMember(newMember);
       resetForm();
@@ -169,6 +231,40 @@ export const AddMemberModal = ({ onClose, onAddMember }) => {
               />
               {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
             </div>
+                              <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Profile Image
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden">
+                        {imagePreview ? (
+                          <img
+                            src={imagePreview}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Camera className="h-8 w-8 text-gray-400" />
+                        )}
+                      </div>
+                      <div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                          id="profile-image"
+                        />
+                        <label
+                          htmlFor="profile-image"
+                          className="cursor-pointer bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition duration-300 inline-flex items-center space-x-2"
+                        >
+                          <Camera className="h-4 w-4" />
+                          <span>Choose Image</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
 
             {/* Email */}
             <div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Filter, 
   Calendar, 
@@ -11,8 +11,10 @@ import {
   Edit,
   Eye
 } from 'lucide-react';
+import { AddTaskModal } from '../layouts/AddTaskModal';
 
 const ProjectProfile = () => {
+  const [addTaskPop, setAddTaskPop]= useState(false)
   // Dummy data for team members
   const teamMembers = [
     { id: 1, name: 'John', avatar: 'bg-blue-500', initial: 'J' },
@@ -130,6 +132,9 @@ const ProjectProfile = () => {
 
   const renderTask = (task) => (
     <div key={task.id} className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+      {
+        addTaskPop && <AddTaskModal onClose={()=>setAddTaskPop(false)}/>
+      }
       <div className="flex justify-between items-start mb-3">
         {task.priority && (
           <span className={`px-2 py-1 rounded text-xs font-medium ${task.priorityColor}`}>
@@ -221,7 +226,7 @@ const ProjectProfile = () => {
           </div>
           
           <div className="flex items-center space-x-3">
-            <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg bg-primary hover:bg-primary/70 transition-colors">
+            <button onClick={()=>setAddTaskPop(true)} className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg bg-primary hover:bg-primary/70 transition-colors">
               <Plus className="h-4 w-4 text-white" />
               <span className="text-sm text-white">Add Task</span>
             </button>
