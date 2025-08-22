@@ -1,100 +1,180 @@
-import React, { useState } from 'react';
-import { 
-  X, 
-  Calendar, 
-  Clock, 
-  Users, 
-  Tag, 
-  FileText, 
+import React, { useState } from "react";
+import {
+  X,
+  Calendar,
+  Clock,
+  Users,
+  Tag,
+  FileText,
   Plus,
   Upload,
-  ChevronDown
-} from 'lucide-react';
+  ChevronDown,
+} from "lucide-react";
+import { useSelector } from "react-redux";
+import toast, { Toaster } from "react-hot-toast";
+import { getDatabase, push, ref, set } from "firebase/database";
 
-const ProjectCreationModal = ({ isOpen, onClose }) => {
+const ProjectCreationModal = ({ member, onClose }) => {
+  const db = getDatabase();
+  const user = useSelector((state) => state.userInfo.value);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    priority: 'Medium',
-    category: 'Development',
-    teamMembers: [],
-    tags: [],
-    budget: '',
-    client: ''
+    title: "",
+    description: "",
+    startDate: "",
+    endDate: "",
+    priority: "Medium",
+    category: "Development",
+    adminId: user?.uid,
+    status: "Todo",
+    budget: "",
+    client: "",
   });
 
-  const [newTag, setNewTag] = useState('');
+  const [newTag, setNewTag] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
 
-  const priorities = ['Low', 'Medium', 'High', 'Critical'];
-  const categories = ['Development', 'Design', 'Marketing', 'Research', 'Other'];
-  
+  const priorities = ["Low", "Medium", "High", "Critical"];
+  const categories = [
+    "Development",
+    "Design",
+    "Marketing",
+    "Research",
+    "Other",
+  ];
+
   const teamMembers = [
-    { id: 1, name: 'John Smith', email: 'john@example.com', avatar: 'bg-blue-500', initial: 'J' },
-    { id: 2, name: 'Sarah Wilson', email: 'sarah@example.com', avatar: 'bg-green-500', initial: 'S' },
-    { id: 3, name: 'Mike Johnson', email: 'mike@example.com', avatar: 'bg-purple-500', initial: 'M' },
-    { id: 4, name: 'Lisa Chen', email: 'lisa@example.com', avatar: 'bg-pink-500', initial: 'L' },
-    { id: 5, name: 'Tom Wilson', email: 'tom@example.com', avatar: 'bg-orange-500', initial: 'T' },
+    {
+      id: 1,
+      name: "John Smith",
+      email: "john@example.com",
+      avatar: "bg-blue-500",
+      initial: "J",
+    },
+    {
+      id: 2,
+      name: "Sarah Wilson",
+      email: "sarah@example.com",
+      avatar: "bg-green-500",
+      initial: "S",
+    },
+    {
+      id: 3,
+      name: "Mike Johnson",
+      email: "mike@example.com",
+      avatar: "bg-purple-500",
+      initial: "M",
+    },
+    {
+      id: 4,
+      name: "Lisa Chen",
+      email: "lisa@example.com",
+      avatar: "bg-pink-500",
+      initial: "L",
+    },
+    {
+      id: 5,
+      name: "Tom Wilson",
+      email: "tom@example.com",
+      avatar: "bg-orange-500",
+      initial: "T",
+    },
   ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleAddTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        tags: [...prev.tags, newTag.trim()]
+        tags: [...prev.tags, newTag.trim()],
       }));
-      setNewTag('');
+      setNewTag("");
     }
   };
 
   const handleRemoveTag = (tagToRemove) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
     }));
   };
 
   const handleMemberSelect = (member) => {
-    setSelectedMembers(prev => {
-      const isSelected = prev.find(m => m.id === member.id);
+    setSelectedMembers((prev) => {
+      const isSelected = prev.find((m) => m.id === member.id);
       if (isSelected) {
-        return prev.filter(m => m.id !== member.id);
+        return prev.filter((m) => m.id !== member.id);
       } else {
         return [...prev, member];
       }
     });
   };
 
-  const handleSubmit = (e) => {
-    if (e) e.preventDefault();
-    const projectData = {
-      ...formData,
-      teamMembers: selectedMembers
-    };
-    console.log('Creating project:', projectData);
-    // Handle project creation logic here
-    onClose();
+
+const handleSubmit = (e) => {
+  if (e) e.preventDefault();
+  const { title, description, startDate, endDate, priority, category } =
+    formData;
+
+  if (
+    !title.trim() ||
+    !description.trim() ||
+    !startDate ||
+    !endDate ||
+    !priority ||
+    !category
+  ) {
+    toast.error("Please fill all required fields!");
+    return;
+  }
+
+  const db = getDatabase();
+
+  const projectRef = push(ref(db, "projects/"));
+  const projectId = projectRef.key;
+
+  const projectData = {
+    ...formData,
   };
+
+  set(projectRef, projectData)
+    .then(() => {
+      selectedMembers.forEach((m) => {
+        const memberRef = push(ref(db, "members/"));
+        set(memberRef, {
+          projectId: projectId,
+          memberId: m.id,
+          memberImage: m.profileImage,
+          memberName: m.name
+        });
+      });
+      toast.success("Project Created Successfully");
+      onClose();
+    })
+    .catch((err) => {
+      toast.error(err.message);
+    });
+};
+
 
   // if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-lg flex items-center justify-center z-50 p-4">
+      <Toaster position="top-right" />
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-800">Create New Project</h2>
-          <button 
+          <h2 className="text-2xl font-bold text-gray-800">
+            Create New Project
+          </h2>
+          <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -104,7 +184,6 @@ const ProjectCreationModal = ({ isOpen, onClose }) => {
 
         {/* Form */}
         <div className="p-6 space-y-6">
-          
           {/* Project Title */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -158,7 +237,7 @@ const ProjectCreationModal = ({ isOpen, onClose }) => {
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 End Date *
@@ -190,14 +269,16 @@ const ProjectCreationModal = ({ isOpen, onClose }) => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition appearance-none"
                 >
-                  {priorities.map(priority => (
-                    <option key={priority} value={priority}>{priority}</option>
+                  {priorities.map((priority) => (
+                    <option key={priority} value={priority}>
+                      {priority}
+                    </option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-3 top-3 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Category
@@ -209,8 +290,10 @@ const ProjectCreationModal = ({ isOpen, onClose }) => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition appearance-none"
                 >
-                  {categories.map(category => (
-                    <option key={category} value={category}>{category}</option>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-3 top-3 h-5 w-5 text-gray-400 pointer-events-none" />
@@ -233,7 +316,7 @@ const ProjectCreationModal = ({ isOpen, onClose }) => {
                 placeholder="Enter budget amount"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Client (Optional)
@@ -250,38 +333,55 @@ const ProjectCreationModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* Team Members */}
+          {/* Team Members */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Team Members
             </label>
             <div className="border border-gray-300 rounded-lg p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                {teamMembers.map(member => (
-                  <label key={member.id} className="flex items-center space-x-3 cursor-pointer">
+                {member?.map((mem, index) => (
+                  <label
+                    key={index}
+                    className="flex items-center space-x-3 cursor-pointer"
+                  >
                     <input
                       type="checkbox"
-                      checked={selectedMembers.some(m => m.id === member.id)}
-                      onChange={() => handleMemberSelect(member)}
+                      checked={selectedMembers.some(
+                        (m) => m.email === mem.email
+                      )}
+                      onChange={() => handleMemberSelect(mem)}
                       className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                     />
-                    <div className={`w-8 h-8 ${member.avatar} rounded-full flex items-center justify-center text-white text-xs font-medium`}>
-                      {member.initial}
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                      <img
+                        src={mem.profileImage}
+                        alt={mem.name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-800">{member.name}</p>
-                      <p className="text-xs text-gray-500">{member.email}</p>
+                      <p className="text-sm font-medium text-gray-800">
+                        {mem.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{mem.email}</p>
                     </div>
                   </label>
                 ))}
               </div>
-              
+
               {selectedMembers.length > 0 && (
                 <div className="pt-3 border-t border-gray-200">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Selected Members:</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Selected Members:
+                  </p>
                   <div className="flex flex-wrap gap-2">
-                    {selectedMembers.map(member => (
-                      <span key={member.id} className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
-                        {member.name}
+                    {selectedMembers.map((m, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm"
+                      >
+                        {m.name}
                       </span>
                     ))}
                   </div>
@@ -355,6 +455,5 @@ const ProjectCreationModal = ({ isOpen, onClose }) => {
     </div>
   );
 };
-
 
 export default ProjectCreationModal;

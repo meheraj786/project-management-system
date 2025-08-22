@@ -16,6 +16,7 @@ import { Provider } from "react-redux";
 import UserRoute from "./protectedRoutes/UserRoute.jsx";
 import CurrentUserProvider from "./context/CurrentUserProvider.jsx";
 import Members from "./pages/Members.jsx";
+import DummyDashboard from "./App.jsx";
 
 
 const router = createBrowserRouter([
@@ -27,11 +28,11 @@ const router = createBrowserRouter([
             element: <Home/>,
           },
           {
-            path: '/task',
+            path: '/task/:id',
             element: <TaskDetailPage />,
           },
           {
-            path: '/projects',
+            path: '/project/:id',
             element: <ProjectProfile />,
           },
           {

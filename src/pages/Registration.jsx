@@ -155,6 +155,7 @@ const Registration = () => {
             set(ref(db, "users/" + user.uid), {
               name: `${formData.firstName} ${formData.lastName}`,
               email: formData.email,
+              accountType: "admin",
               profileImage: formData.profileImage,
               businessType: formData.businessType,
               role: formData.role,

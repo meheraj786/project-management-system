@@ -1,86 +1,134 @@
-import React, { useState } from 'react';
-import { 
-  ArrowLeft, 
-  Star, 
-  Share2, 
-  MoreHorizontal, 
-  Calendar, 
-  User, 
-  MessageCircle, 
-  Paperclip, 
+import React, { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  Star,
+  Share2,
+  MoreHorizontal,
+  Calendar,
+  User,
+  MessageCircle,
+  Paperclip,
   Plus,
   Send,
   Clock,
   CheckCircle,
   Circle,
   Edit,
-  Trash2
-} from 'lucide-react';
+  Trash2,
+} from "lucide-react";
+import { useParams } from "react-router";
+import { getDatabase, onValue, ref } from "firebase/database";
+import moment from "moment";
 
 const TaskDetailPage = () => {
-  const [newComment, setNewComment] = useState('');
+  const [taskDetail, setTaskDetail] = useState(null);
+  const { id } = useParams();
+  const db = getDatabase();
+  const [newComment, setNewComment] = useState("");
   const [checkedItems, setCheckedItems] = useState({
     1: true,
     2: false,
     3: false,
-    4: true
+    4: true,
   });
 
+  useEffect(() => {
+    const taskRef = ref(db, "tasks/");
+    onValue(taskRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        arr.push({ ...item.val(), id: item.key });
+      });
+      setTaskDetail(arr.find((t) => t.id == id));
+    });
+  }, [db, id]);
+
+  console.log(taskDetail, "taskDetail");
+
   const teamMembers = [
-    { id: 1, name: 'John Smith', avatar: 'bg-blue-500', initial: 'J', role: 'Project Manager' },
-    { id: 2, name: 'Sarah Wilson', avatar: 'bg-green-500', initial: 'S', role: 'UI/UX Designer' },
-    { id: 3, name: 'Mike Johnson', avatar: 'bg-purple-500', initial: 'M', role: 'Developer' },
+    {
+      id: 1,
+      name: "John Smith",
+      avatar: "bg-blue-500",
+      initial: "J",
+      role: "Project Manager",
+    },
+    {
+      id: 2,
+      name: "Sarah Wilson",
+      avatar: "bg-green-500",
+      initial: "S",
+      role: "UI/UX Designer",
+    },
+    {
+      id: 3,
+      name: "Mike Johnson",
+      avatar: "bg-purple-500",
+      initial: "M",
+      role: "Developer",
+    },
   ];
 
   const comments = [
     {
       id: 1,
-      author: 'Sarah Wilson',
-      avatar: 'bg-green-500',
-      initial: 'S',
-      time: '2 hours ago',
-      content: 'Great ideas! I think we should focus more on user experience aspects during our brainstorming session.'
+      author: "Sarah Wilson",
+      avatar: "bg-green-500",
+      initial: "S",
+      time: "2 hours ago",
+      content:
+        "Great ideas! I think we should focus more on user experience aspects during our brainstorming session.",
     },
     {
       id: 2,
-      author: 'John Smith',
-      avatar: 'bg-blue-500',
-      initial: 'J',
-      time: '4 hours ago',
-      content: 'I\'ve added some initial thoughts to the document. Let\'s schedule a meeting to discuss these ideas further.'
+      author: "John Smith",
+      avatar: "bg-blue-500",
+      initial: "J",
+      time: "4 hours ago",
+      content:
+        "I've added some initial thoughts to the document. Let's schedule a meeting to discuss these ideas further.",
     },
     {
       id: 3,
-      author: 'Mike Johnson',
-      avatar: 'bg-purple-500',
-      initial: 'M',
-      time: '1 day ago',
-      content: 'From a technical perspective, we need to consider the feasibility of implementation for each idea.'
-    }
+      author: "Mike Johnson",
+      avatar: "bg-purple-500",
+      initial: "M",
+      time: "1 day ago",
+      content:
+        "From a technical perspective, we need to consider the feasibility of implementation for each idea.",
+    },
   ];
 
   const subtasks = [
-    { id: 1, title: 'Research user pain points', completed: true },
-    { id: 2, title: 'Define problem statements', completed: false },
-    { id: 3, title: 'Generate solution ideas', completed: false },
-    { id: 4, title: 'Prioritize ideas by impact', completed: true },
+    { id: 1, title: "Research user pain points", completed: true },
+    { id: 2, title: "Define problem statements", completed: false },
+    { id: 3, title: "Generate solution ideas", completed: false },
+    { id: 4, title: "Prioritize ideas by impact", completed: true },
   ];
 
   const attachments = [
-    { id: 1, name: 'brainstorming-notes.pdf', size: '2.4 MB', type: 'pdf' },
-    { id: 2, name: 'user-research-data.xlsx', size: '1.8 MB', type: 'excel' },
-    { id: 3, name: 'wireframes-v1.fig', size: '5.2 MB', type: 'figma' },
+    { id: 1, name: "brainstorming-notes.pdf", size: "2.4 MB", type: "pdf" },
+    { id: 2, name: "user-research-data.xlsx", size: "1.8 MB", type: "excel" },
+    { id: 3, name: "wireframes-v1.fig", size: "5.2 MB", type: "figma" },
   ];
 
   const handleCheckboxChange = (id) => {
-    setCheckedItems(prev => ({
+    setCheckedItems((prev) => ({
       ...prev,
-      [id]: !prev[id]
+      [id]: !prev[id],
     }));
+  };
+  const priorityStyles = {
+    Low: "bg-blue-100 text-blue-600",
+    Medium: "bg-yellow-100 text-yellow-600",
+    High: "bg-orange-100 text-orange-600",
+    Critical: "bg-red-100 text-red-600",
   };
 
   const renderAvatar = (member) => (
-    <div className={`w-8 h-8 rounded-full ${member.avatar} flex items-center justify-center text-white text-xs font-medium`}>
+    <div
+      className={`w-8 h-8 rounded-full ${member.avatar} flex items-center justify-center text-white text-xs font-medium`}
+    >
       {member.initial}
     </div>
   );
@@ -94,9 +142,11 @@ const TaskDetailPage = () => {
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <ArrowLeft className="h-5 w-5 text-gray-600" />
             </button>
-            <h1 className="text-xl font-semibold text-gray-800">Task Details</h1>
+            <h1 className="text-xl font-semibold text-gray-800">
+              Task Details
+            </h1>
           </div>
-          
+
           <div className="flex items-center space-x-3">
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <Star className="h-5 w-5 text-gray-400" />
@@ -119,37 +169,49 @@ const TaskDetailPage = () => {
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-600">
-                    Low Priority
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      priorityStyles[taskDetail?.priority] ||
+                      "bg-gray-100 text-gray-600"
+                    } text-blue-600`}
+                  >
+                    {taskDetail?.priority}
                   </span>
                   <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-600">
-                    To Do
+                    {taskDetail?.status}
                   </span>
                 </div>
                 <button className="text-gray-400 hover:text-gray-600">
                   <Edit className="h-5 w-5" />
                 </button>
               </div>
-              
-              <h1 className="text-2xl font-bold text-gray-800 mb-3">Brainstorming</h1>
+
+              <h1 className="text-2xl font-bold text-gray-800 mb-3">
+                {taskDetail?.title}
+              </h1>
               <p className="text-gray-600 leading-relaxed">
-                Brainstorming brings team members' diverse experience into play. This collaborative approach helps us generate innovative solutions and explore different perspectives. We'll focus on creating a safe environment where all ideas are welcome and can be built upon by the team.
+                {taskDetail?.description}
               </p>
             </div>
 
             {/* Subtasks */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-800">Subtasks</h2>
+                <h2 className="text-lg font-semibold text-gray-800">
+                  Subtasks
+                </h2>
                 <button className="text-purple-600 hover:text-purple-700">
                   <Plus className="h-5 w-5" />
                 </button>
               </div>
-              
+
               <div className="space-y-3">
-                {subtasks.map(subtask => (
-                  <div key={subtask.id} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                    <button 
+                {subtasks.map((subtask) => (
+                  <div
+                    key={subtask.id}
+                    className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <button
                       onClick={() => handleCheckboxChange(subtask.id)}
                       className="flex-shrink-0"
                     >
@@ -159,7 +221,13 @@ const TaskDetailPage = () => {
                         <Circle className="h-5 w-5 text-gray-400" />
                       )}
                     </button>
-                    <span className={`flex-1 ${checkedItems[subtask.id] ? 'line-through text-gray-500' : 'text-gray-700'}`}>
+                    <span
+                      className={`flex-1 ${
+                        checkedItems[subtask.id]
+                          ? "line-through text-gray-500"
+                          : "text-gray-700"
+                      }`}
+                    >
                       {subtask.title}
                     </span>
                     <button className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100">
@@ -170,12 +238,12 @@ const TaskDetailPage = () => {
               </div>
             </div>
 
-
-
             {/* Comments */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Comments</h2>
-              
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                Comments
+              </h2>
+
               {/* New Comment */}
               <div className="flex space-x-3 mb-6">
                 <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium">
@@ -197,21 +265,29 @@ const TaskDetailPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Comments List */}
               <div className="space-y-4">
-                {comments.map(comment => (
+                {comments.map((comment) => (
                   <div key={comment.id} className="flex space-x-3">
-                    <div className={`w-8 h-8 rounded-full ${comment.avatar} flex items-center justify-center text-white text-xs font-medium`}>
+                    <div
+                      className={`w-8 h-8 rounded-full ${comment.avatar} flex items-center justify-center text-white text-xs font-medium`}
+                    >
                       {comment.initial}
                     </div>
                     <div className="flex-1">
                       <div className="bg-gray-50 rounded-lg p-3">
                         <div className="flex items-center space-x-2 mb-1">
-                          <span className="font-medium text-gray-800">{comment.author}</span>
-                          <span className="text-xs text-gray-500">{comment.time}</span>
+                          <span className="font-medium text-gray-800">
+                            {comment.author}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {comment.time}
+                          </span>
                         </div>
-                        <p className="text-gray-700 text-sm">{comment.content}</p>
+                        <p className="text-gray-700 text-sm">
+                          {comment.content}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -224,27 +300,42 @@ const TaskDetailPage = () => {
           <div className="space-y-6">
             {/* Task Info */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-800 mb-4">Task Information</h3>
-              
+              <h3 className="font-semibold text-gray-800 mb-4">
+                Task Information
+              </h3>
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Status</span>
-                  <span className="px-2 py-1 bg-purple-100 text-purple-600 rounded text-sm font-medium">To Do</span>
+                  <span className="px-2 py-1 bg-purple-100 text-purple-600 rounded text-sm font-medium">
+                    {taskDetail?.status}
+                  </span>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Priority</span>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-sm font-medium">Low</span>
+                  <span
+                    className={`px-2 py-1 rounded text-sm font-medium ${
+                      priorityStyles[taskDetail?.priority] ||
+                      "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {taskDetail?.priority}
+                  </span>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Created</span>
-                  <span className="text-gray-800 text-sm">Nov 15, 2024</span>
+                  <span className="text-gray-800 text-sm">
+                    {moment().add(taskDetail?.createdAt).calendar()}
+                  </span>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Due Date</span>
-                  <span className="text-red-600 text-sm">Nov 25, 2024</span>
+                  <span className="text-red-600 text-sm">
+                    {taskDetail?.dueDate}
+                  </span>
                 </div>
               </div>
             </div>
@@ -257,13 +348,15 @@ const TaskDetailPage = () => {
                   <Plus className="h-5 w-5" />
                 </button>
               </div>
-              
+
               <div className="space-y-3">
-                {teamMembers.map(member => (
+                {teamMembers.map((member) => (
                   <div key={member.id} className="flex items-center space-x-3">
                     {renderAvatar(member)}
                     <div className="flex-1">
-                      <p className="font-medium text-gray-800 text-sm">{member.name}</p>
+                      <p className="font-medium text-gray-800 text-sm">
+                        {member.name}
+                      </p>
                       <p className="text-xs text-gray-500">{member.role}</p>
                     </div>
                     <button className="text-gray-400 hover:text-gray-600">
@@ -273,8 +366,6 @@ const TaskDetailPage = () => {
                 ))}
               </div>
             </div>
-
-
           </div>
         </div>
       </div>

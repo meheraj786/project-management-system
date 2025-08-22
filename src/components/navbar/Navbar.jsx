@@ -35,7 +35,6 @@ const Navbar = () => {
         // An error happened.
       });
   };
-console.log(currentUser, "currentUser");
 
   return (
     <nav className="bg-white border-b border-gray-200 px-4 lg:px-6 py-3 shadow-sm">

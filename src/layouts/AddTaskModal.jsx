@@ -1,40 +1,63 @@
-import React, { useState } from 'react';
-import { X, Plus, Calendar, Flag, FileText, Clock } from 'lucide-react';
+import React, { useState } from "react";
+import { X, Plus, Calendar, Flag, FileText, Clock } from "lucide-react";
+import { getDatabase, push, ref, set } from "firebase/database";
+import toast, { Toaster } from "react-hot-toast";
+import moment from "moment";
 
-export const AddTaskModal = ({ onClose, onAddTask }) => {
+export const AddTaskModal = ({ projectData, onClose }) => {
+  const db = getDatabase();
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    status: 'To Do',
-    priority: 'Low',
-    dueDate: '',
-    createdDate: new Date().toISOString().split('T')[0]
+    title: "",
+    description: "",
+    status: "Todo",
+    priority: "Low",
+    dueDate: "",
   });
+  console.log(projectData);
 
   const [errors, setErrors] = useState({});
 
   const statusOptions = [
-    { value: 'To Do', color: 'bg-purple-100 text-purple-700', bgColor: 'bg-purple-500' },
-    { value: 'In Progress', color: 'bg-orange-100 text-orange-700', bgColor: 'bg-orange-500' },
-    { value: 'Completed', color: 'bg-green-100 text-green-700', bgColor: 'bg-green-500' },
-    { value: 'On Hold', color: 'bg-gray-100 text-gray-700', bgColor: 'bg-gray-500' }
+    {
+      value: "Todo",
+      color: "bg-purple-100 text-purple-700",
+      bgColor: "bg-purple-500",
+    },
+    {
+      value: "InProgress",
+      color: "bg-orange-100 text-orange-700",
+      bgColor: "bg-orange-500",
+    },
+    {
+      value: "Completed",
+      color: "bg-green-100 text-green-700",
+      bgColor: "bg-green-500",
+    },
   ];
 
   const priorityOptions = [
-    { value: 'Low', color: 'bg-blue-100 text-blue-700', bgColor: 'bg-blue-500' },
-    { value: 'Medium', color: 'bg-yellow-100 text-yellow-700', bgColor: 'bg-yellow-500' },
-    { value: 'High', color: 'bg-red-100 text-red-700', bgColor: 'bg-red-500' }
+    {
+      value: "Low",
+      color: "bg-blue-100 text-blue-700",
+      bgColor: "bg-blue-500",
+    },
+    {
+      value: "Medium",
+      color: "bg-yellow-100 text-yellow-700",
+      bgColor: "bg-yellow-500",
+    },
+    { value: "High", color: "bg-red-100 text-red-700", bgColor: "bg-red-500" },
   ];
 
   const validateForm = () => {
     const newErrors = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Task title is required';
+      newErrors.title = "Task title is required";
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Task description is required';
+      newErrors.description = "Task description is required";
     }
 
     setErrors(newErrors);
@@ -44,25 +67,34 @@ export const AddTaskModal = ({ onClose, onAddTask }) => {
   const handleSubmit = () => {
     if (validateForm()) {
       const newTask = {
-        id: Date.now(),
         ...formData,
-        createdAt: new Date().toISOString()
+        adminId: projectData?.adminId,
+        projectId: projectData?.id,
+        createdAt: moment().format(),
       };
-      
-      onAddTask(newTask);
-      resetForm();
-      onClose();
+      set(push(ref(db, "tasks/"), newTask))
+        .then(() => {
+          toast.success("Task Created");
+          resetForm();
+          handleClose()
+        })
+        .catch((err) => {
+          console.log(err.message);
+        });
+        handleClose()
+    }else{
+      toast.error("Please Fill All Fields")
     }
   };
 
   const resetForm = () => {
     setFormData({
-      title: '',
-      description: '',
-      status: 'To Do',
-      priority: 'Low',
-      dueDate: '',
-      createdDate: new Date().toISOString().split('T')[0]
+      title: "",
+      description: "",
+      status: "To Do",
+      priority: "Low",
+      dueDate: "",
+      createdDate: new Date().toISOString().split("T")[0],
     });
     setErrors({});
   };
@@ -73,24 +105,26 @@ export const AddTaskModal = ({ onClose, onAddTask }) => {
   };
 
   const getStatusStyle = (status) => {
-    const option = statusOptions.find(opt => opt.value === status);
-    return option ? option.color : 'bg-gray-100 text-gray-700';
+    const option = statusOptions.find((opt) => opt.value === status);
+    return option ? option.color : "bg-gray-100 text-gray-700";
   };
 
   const getPriorityStyle = (priority) => {
-    const option = priorityOptions.find(opt => opt.value === priority);
-    return option ? option.color : 'bg-gray-100 text-gray-700';
+    const option = priorityOptions.find((opt) => opt.value === priority);
+    return option ? option.color : "bg-gray-100 text-gray-700";
   };
-
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <Toaster position="top-right"/>
       <div className="bg-white rounded-xl w-full max-w-2xl max-h-[95vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Add New Task</h2>
-            <p className="text-gray-600 mt-1">Create a new task for your project</p>
+            <p className="text-gray-600 mt-1">
+              Create a new task for your project
+            </p>
           </div>
           <button
             onClick={handleClose}
@@ -112,13 +146,17 @@ export const AddTaskModal = ({ onClose, onAddTask }) => {
               <input
                 type="text"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 placeholder="Enter task title"
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors text-lg font-semibold ${
-                  errors.title ? 'border-red-500' : 'border-gray-300'
+                  errors.title ? "border-red-500" : "border-gray-300"
                 }`}
               />
-              {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+              {errors.title && (
+                <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+              )}
             </div>
 
             {/* Task Description */}
@@ -128,14 +166,20 @@ export const AddTaskModal = ({ onClose, onAddTask }) => {
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="Describe what needs to be done..."
                 rows={4}
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors resize-none ${
-                  errors.description ? 'border-red-500' : 'border-gray-300'
+                  errors.description ? "border-red-500" : "border-gray-300"
                 }`}
               />
-              {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+              {errors.description && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.description}
+                </p>
+              )}
             </div>
 
             {/* Status and Priority Row */}
@@ -150,14 +194,18 @@ export const AddTaskModal = ({ onClose, onAddTask }) => {
                     <button
                       key={option.value}
                       type="button"
-                      onClick={() => setFormData({ ...formData, status: option.value })}
+                      onClick={() =>
+                        setFormData({ ...formData, status: option.value })
+                      }
                       className={`w-full text-left p-3 rounded-lg border-2 transition-colors ${
-                        formData.status === option.value 
-                          ? 'border-purple-500 bg-purple-50' 
-                          : 'border-gray-200 hover:border-gray-300'
+                        formData.status === option.value
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${option.color}`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${option.color}`}
+                      >
                         {option.value}
                       </span>
                     </button>
@@ -176,14 +224,18 @@ export const AddTaskModal = ({ onClose, onAddTask }) => {
                     <button
                       key={option.value}
                       type="button"
-                      onClick={() => setFormData({ ...formData, priority: option.value })}
+                      onClick={() =>
+                        setFormData({ ...formData, priority: option.value })
+                      }
                       className={`w-full text-left p-3 rounded-lg border-2 transition-colors ${
-                        formData.priority === option.value 
-                          ? 'border-purple-500 bg-purple-50' 
-                          : 'border-gray-200 hover:border-gray-300'
+                        formData.priority === option.value
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${option.color}`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${option.color}`}
+                      >
                         {option.value} Priority
                       </span>
                     </button>
@@ -201,7 +253,9 @@ export const AddTaskModal = ({ onClose, onAddTask }) => {
               <input
                 type="date"
                 value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, dueDate: e.target.value })
+                }
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
               />
             </div>
@@ -210,21 +264,33 @@ export const AddTaskModal = ({ onClose, onAddTask }) => {
           {/* Task Preview */}
           {formData.title && (
             <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-700 mb-4">Task Preview</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-4">
+                Task Preview
+              </h3>
               <div className="bg-white p-4 rounded-lg border border-gray-200">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex gap-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPriorityStyle(formData.priority)}`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getPriorityStyle(
+                        formData.priority
+                      )}`}
+                    >
                       {formData.priority} Priority
                     </span>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(formData.status)}`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(
+                        formData.status
+                      )}`}
+                    >
                       {formData.status}
                     </span>
                   </div>
                 </div>
-                
-                <h4 className="text-lg font-bold text-gray-900 mb-2">{formData.title}</h4>
-                
+
+                <h4 className="text-lg font-bold text-gray-900 mb-2">
+                  {formData.title}
+                </h4>
+
                 {formData.description && (
                   <p className="text-gray-600 text-sm mb-4 leading-relaxed">
                     {formData.description}
@@ -235,7 +301,8 @@ export const AddTaskModal = ({ onClose, onAddTask }) => {
                   <div className="flex items-center gap-4">
                     <span className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      Created: {new Date(formData.createdDate).toLocaleDateString()}
+                      Created:{" "}
+                      {new Date(formData.createdDate).toLocaleDateString()}
                     </span>
                     {formData.dueDate && (
                       <span className="flex items-center gap-1">
@@ -272,4 +339,3 @@ export const AddTaskModal = ({ onClose, onAddTask }) => {
     </div>
   );
 };
-

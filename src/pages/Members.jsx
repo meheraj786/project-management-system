@@ -1,103 +1,161 @@
-import React, { useState } from 'react';
-import { Plus, Search, MoreHorizontal, User, Mail, Calendar, X } from 'lucide-react';
-import { AddMemberModal } from '../layouts/AddMemberModal';
+import React, { useEffect, useState } from "react";
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  User,
+  Mail,
+  Calendar,
+  X,
+  LampDesk,
+  Hammer,
+  Palette,
+  Package,
+  Megaphone,
+  ShoppingCart,
+  Users,
+  Wallet,
+  Cog,
+} from "lucide-react";
+import { AddMemberModal } from "../layouts/AddMemberModal";
+import { useSelector } from "react-redux";
+import { getDatabase, onValue, ref } from "firebase/database";
 
 const Members = () => {
   // const[addMemberPop, setAddMemberPop]= useState(false)
-  const [members, setMembers] = useState([
-    {
-      id: 1,
-      name: 'John Smith',
-      email: 'john.smith@company.com',
-      role: 'Product Manager',
-      avatar: 'J',
-      color: 'bg-blue-500',
-      joinDate: '2024-01-15',
-      status: 'Active'
-    },
-    {
-      id: 2,
-      name: 'Sarah Wilson',
-      email: 'sarah.wilson@company.com',
-      role: 'UI/UX Designer',
-      avatar: 'S',
-      color: 'bg-green-500',
-      joinDate: '2024-02-20',
-      status: 'Active'
-    },
-    {
-      id: 3,
-      name: 'Mike Johnson',
-      email: 'mike.johnson@company.com',
-      role: 'Frontend Developer',
-      avatar: 'M',
-      color: 'bg-primary',
-      joinDate: '2024-03-10',
-      status: 'Active'
-    },
-    {
-      id: 4,
-      name: 'Lisa Chen',
-      email: 'lisa.chen@company.com',
-      role: 'Backend Developer',
-      avatar: 'L',
-      color: 'bg-orange-500',
-      joinDate: '2024-01-30',
-      status: 'Active'
-    }
-  ]);
+  const user = useSelector((state) => state.userInfo.value);
+  const db = getDatabase();
+  const [departments, setDepartments] = useState([]);
+  const [members, setMembers] = useState([]);
+
+  useEffect(() => {
+    const starCountRef = ref(db, "users/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const members = item.val();
+        if (members.adminId == user?.uid) {
+          arr.push({ ...members, id: item.key });
+        }
+      });
+      setMembers(arr);
+      setDepartments(() => {
+        let departments = arr.map((m) => m.department);
+        const set = new Set(departments);
+        const department = [...set];
+        return department;
+      });
+    });
+  }, []);
+  // const [members, setMembers] = useState([
+  //   {
+  //     id: 1,
+  //     name: 'John Smith',
+  //     email: 'john.smith@company.com',
+  //     role: 'Product Manager',
+  //     avatar: 'J',
+  //     color: 'bg-blue-500',
+  //     joinDate: '2024-01-15',
+  //     status: 'Active'
+  //   },
+  //   {
+  //     id: 2,
+  //     name: 'Sarah Wilson',
+  //     email: 'sarah.wilson@company.com',
+  //     role: 'UI/UX Designer',
+  //     avatar: 'S',
+  //     color: 'bg-green-500',
+  //     joinDate: '2024-02-20',
+  //     status: 'Active'
+  //   },
+  //   {
+  //     id: 3,
+  //     name: 'Mike Johnson',
+  //     email: 'mike.johnson@company.com',
+  //     role: 'Frontend Developer',
+  //     avatar: 'M',
+  //     color: 'bg-primary',
+  //     joinDate: '2024-03-10',
+  //     status: 'Active'
+  //   },
+  //   {
+  //     id: 4,
+  //     name: 'Lisa Chen',
+  //     email: 'lisa.chen@company.com',
+  //     role: 'Backend Developer',
+  //     avatar: 'L',
+  //     color: 'bg-orange-500',
+  //     joinDate: '2024-01-30',
+  //     status: 'Active'
+  //   }
+  // ]);
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [newMember, setNewMember] = useState({
-    name: '',
-    email: '',
-    role: ''
+    name: "",
+    email: "",
+    role: "",
   });
-
-  const filteredMembers = members.filter(member =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const addMember = () => {
-    if (newMember.name && newMember.email && newMember.role) {
-      const colors = ['bg-blue-500', 'bg-green-500', 'bg-primary', 'bg-orange-500', 'bg-pink-500', 'bg-indigo-500'];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
-      
-      const member = {
-        id: Date.now(),
-        ...newMember,
-        avatar: newMember.name.charAt(0).toUpperCase(),
-        color: randomColor,
-        joinDate: new Date().toISOString().split('T')[0],
-        status: 'Active'
-      };
-      
-      setMembers([...members, member]);
-      setNewMember({ name: '', email: '', role: '' });
-      setShowAddModal(false);
-    }
+  const departmentIcons = {
+    Engineering: <Hammer className="w-4 h-4 text-blue-500" />,
+    Design: <Palette className="w-4 h-4 text-pink-500" />,
+    Product: <Package className="w-4 h-4 text-yellow-500" />,
+    Marketing: <Megaphone className="w-4 h-4 text-red-500" />,
+    Sales: <ShoppingCart className="w-4 h-4 text-green-500" />,
+    HR: <Users className="w-4 h-4 text-purple-500" />,
+    Finance: <Wallet className="w-4 h-4 text-indigo-500" />,
+    Operations: <Cog className="w-4 h-4 text-gray-600" />,
   };
 
+  const filteredMembers = members.filter(
+    (member) =>
+      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.role.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // const addMember = () => {
+  //   if (newMember.name && newMember.email && newMember.role) {
+  //     const colors = ['bg-blue-500', 'bg-green-500', 'bg-primary', 'bg-orange-500', 'bg-pink-500', 'bg-indigo-500'];
+  //     const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+  //     const member = {
+  //       id: Date.now(),
+  //       ...newMember,
+  //       avatar: newMember.name.charAt(0).toUpperCase(),
+  //       color: randomColor,
+  //       joinDate: new Date().toISOString().split('T')[0],
+  //       status: 'Active'
+  //     };
+
+  //     setMembers([...members, member]);
+  //     setNewMember({ name: '', email: '', role: '' });
+  //     setShowAddModal(false);
+  //   }
+  // };
+
   const removeMember = (id) => {
-    setMembers(members.filter(member => member.id !== id));
+    setMembers(members.filter((member) => member.id !== id));
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      {
-        showAddModal && <AddMemberModal onClose={()=>setShowAddModal(false)}/>
-      }
-      
+      {showAddModal && (
+        <AddMemberModal onClose={() => setShowAddModal(false)} />
+      )}
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Team Members</h1>
-              <p className="text-gray-600">Manage your team members and their roles</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                Team Members
+              </h1>
+              <p className="text-gray-600">
+                Manage your team members and their roles
+              </p>
             </div>
             <button
               onClick={() => setShowAddModal(true)}
@@ -113,8 +171,12 @@ const Members = () => {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm font-medium">Total Members</p>
-                  <p className="text-2xl font-bold text-gray-900">{members.length}</p>
+                  <p className="text-gray-600 text-sm font-medium">
+                    Total Members
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {members.length}
+                  </p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-lg">
                   <User className="w-6 h-6 text-blue-600" />
@@ -125,8 +187,12 @@ const Members = () => {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm font-medium">Active Members</p>
-                  <p className="text-2xl font-bold text-gray-900">{members.filter(m => m.status === 'Active').length}</p>
+                  <p className="text-gray-600 text-sm font-medium">
+                    Active Members
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {members.filter((m) => m.status === "Active").length}
+                  </p>
                 </div>
                 <div className="bg-green-100 p-3 rounded-lg">
                   <div className="w-6 h-6 bg-green-500 rounded-full"></div>
@@ -137,8 +203,22 @@ const Members = () => {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm font-medium">Departments</p>
-                  <p className="text-2xl font-bold text-gray-900">{new Set(members.map(m => m.role.split(' ').pop())).size}</p>
+                  <p className="text-gray-600 text-sm font-medium">
+                    Departments
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {departments.length}
+                    </p>
+                    <div className="flex gap-1">
+                      {Object.keys(departmentIcons).map(
+                        (dep) =>
+                          departments.includes(dep) && (
+                            <span className="text-sm rounded-full bg-gray-50" key={dep}>{departmentIcons[dep]}</span>
+                          )
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="bg-purple-100 p-3 rounded-lg">
                   <div className="w-6 h-6 bg-primary rounded-lg"></div>
@@ -163,10 +243,19 @@ const Members = () => {
         {/* Members Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredMembers.map((member) => (
-            <div key={member.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+            <div
+              key={member.id}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
+            >
               <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 ${member.color} rounded-xl flex items-center justify-center text-white font-semibold text-lg`}>
-                  {member.avatar}
+                <div
+                  className={`w-12 h-12 ${member.color} rounded-xl flex items-center justify-center text-white font-semibold text-lg`}
+                >
+                  <img
+                    src={member.profileImage}
+                    className="rounded-xl"
+                    alt=""
+                  />
                 </div>
                 <div className="relative">
                   <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors group">
@@ -185,8 +274,12 @@ const Members = () => {
 
               <div className="space-y-3">
                 <div>
-                  <h3 className="font-semibold text-gray-900 text-lg">{member.name}</h3>
-                  <p className="text-primary text-sm font-medium">{member.role}</p>
+                  <h3 className="font-semibold text-gray-900 text-lg">
+                    {member.name}
+                  </h3>
+                  <p className="text-primary text-sm font-medium">
+                    {member.role}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-2 text-gray-600 text-sm">
@@ -196,13 +289,19 @@ const Members = () => {
 
                 <div className="flex items-center gap-2 text-gray-600 text-sm">
                   <Calendar className="w-4 h-4" />
-                  <span>Joined {new Date(member.joinDate).toLocaleDateString()}</span>
+                  <span>Joined {member.joinDate}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600 text-sm">
+                  {departmentIcons[member.department] || (
+                    <Cog className="w-4 h-4 text-gray-400" />
+                  )}
+                  <span>{member.department}</span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="text-sm text-green-600 font-medium">{member.status}</span>
-                </div>
+                </div> */}
               </div>
             </div>
           ))}
@@ -213,7 +312,9 @@ const Members = () => {
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <User className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No members found</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              No members found
+            </h3>
             <p className="text-gray-600">Try adjusting your search criteria</p>
           </div>
         )}

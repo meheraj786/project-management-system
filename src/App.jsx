@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { MoreVertical, Clock, Calendar, User, Plus, Star } from "lucide-react";
 
 const DummyDashboard = () => {
   // Static Dummy Data
+
   const boards = [
     {
       id: 1,
@@ -90,6 +91,8 @@ const DummyDashboard = () => {
         "The design feels professional and minimal. Perfect for project teams!",
     },
   ];
+
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
