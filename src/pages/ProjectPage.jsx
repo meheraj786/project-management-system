@@ -22,6 +22,8 @@ const ProjectProfile = () => {
   const [members, setMembers] = useState([]);
   const db = getDatabase();
   const { id } = useParams();
+
+  const [assignee, setAssignee] = useState([]);
   useEffect(() => {
     const starCountRef = ref(db, "projects/");
     onValue(starCountRef, (snapshot) => {
@@ -59,6 +61,19 @@ const ProjectProfile = () => {
       });
     });
   }, [db, id]);
+  useEffect(() => {
+    const starCountRef = ref(db, "assignee/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const members = item.val();
+        arr.unshift({ ...members, id: item.key });
+      });
+      setAssignee(arr);
+    });
+  }, [db]);
+  console.log(assignee, "assignee");
+
   const teamMembers = [
     { id: 1, name: "John", avatar: "bg-blue-500", initial: "J" },
     { id: 2, name: "Sarah", avatar: "bg-green-500", initial: "S" },
@@ -175,80 +190,99 @@ const ProjectProfile = () => {
       key={member.id}
       className={`w-8 h-8 rounded-full  flex items-center justify-center text-white text-xs font-medium -ml-2 first:ml-0 border-2 border-white`}
     >
-      <img src={member.memberImage} className="w-full h-full object-cover rounded-full" alt="" />
+      <img
+        src={member.memberImage}
+        className="w-full h-full object-cover rounded-full"
+        alt=""
+      />
     </div>
   );
 
   const renderTask = (task) => (
     <Link to={`/task/${task.id}`}>
-    <div
-      key={task.id}
-      className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-    >
-      <div className="flex justify-between items-start mb-3">
-        {task.priority && (
-          <span
-            className={`px-2 py-1 rounded text-xs font-medium ${
-              task.priority === "Low"
-                ? "bg-blue-100 text-blue-600"
-                : task.priority === "Medium"
-                ? "bg-yellow-100 text-yellow-600"
-                : task.priority === "High"
-                ? "bg-red-100 text-red-600"
-                : task.priority === "Critical"
-                ? "bg-red-200 text-red-800"
-                : "bg-gray-100 text-gray-600"
-            }`}
-          >
-            {task.priority}
-          </span>
+      <div
+        key={task.id}
+        className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+      >
+        <div className="flex justify-between items-start mb-3">
+          {task.priority && (
+            <span
+              className={`px-2 py-1 rounded text-xs font-medium ${
+                task.priority === "Low"
+                  ? "bg-blue-100 text-blue-600"
+                  : task.priority === "Medium"
+                  ? "bg-yellow-100 text-yellow-600"
+                  : task.priority === "High"
+                  ? "bg-red-100 text-red-600"
+                  : task.priority === "Critical"
+                  ? "bg-red-200 text-red-800"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              {task.priority}
+            </span>
+          )}
+
+          <button className="text-gray-400 hover:text-gray-600">
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </div>
+
+        <h3 className="font-semibold text-gray-800 mb-2">{task?.title}</h3>
+
+        {task?.description && (
+          <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+            {task?.description}
+          </p>
         )}
 
-        <button className="text-gray-400 hover:text-gray-600">
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
-      </div>
-
-      <h3 className="font-semibold text-gray-800 mb-2">{task?.title}</h3>
-
-      {task?.description && (
-        <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-          {task?.description}
-        </p>
-      )}
-
-      {task.image && (
-        <div
-          className={`w-full h-32 rounded-lg mb-4 ${task.image} flex items-center justify-center`}
-        >
-          <div className="w-16 h-16 bg-white bg-opacity-50 rounded-lg flex items-center justify-center">
-            <Eye className="h-8 w-8 text-gray-400" />
-          </div>
-        </div>
-      )}
-
-      {/* <div className="flex items-center justify-between">
-        <div className="flex items-center">
-          {task.assignees.map((assigneeId) =>
-            renderAvatar(teamMembers.find((member) => member.id === assigneeId))
-          )}
-        </div>
-
-        <div className="flex items-center space-x-3 text-gray-500">
-          <div className="flex items-center space-x-1">
-            <MessageCircle className="h-4 w-4" />
-            <span className="text-xs">{task.comments} comments</span>
-          </div>
-          {task.files > 0 && (
-            <div className="flex items-center space-x-1">
-              <Paperclip className="h-4 w-4" />
-              <span className="text-xs">{task.files} files</span>
+        {task.image && (
+          <div
+            className={`w-full h-32 rounded-lg mb-4 ${task.image} flex items-center justify-center`}
+          >
+            <div className="w-16 h-16 bg-white bg-opacity-50 rounded-lg flex items-center justify-center">
+              <Eye className="h-8 w-8 text-gray-400" />
             </div>
-          )}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            {assignee.map(
+              (as) => (
+                <>
+                  {as.taskId == task.id && (
+                    <div
+                      key={as.id}
+                      className={`w-8 h-8 rounded-full  flex items-center justify-center text-white text-xs font-medium -ml-2 first:ml-0 border-2 border-white`}
+                    >
+                      <img
+                        src={as.assigneeImage}
+                        className="w-full h-full object-cover rounded-full"
+                        alt=""
+                      />
+                    </div>
+                  )}
+                </>
+              )
+              // renderAvatar(teamMembers.find((member) => member.id === assigneeId))
+            )}
+          </div>
+
+          <div className="flex items-center space-x-3 text-gray-500">
+            <div className="flex items-center space-x-1">
+              <MessageCircle className="h-4 w-4" />
+              <span className="text-xs">{task.comments} comments</span>
+            </div>
+            {task.files > 0 && (
+              <div className="flex items-center space-x-1">
+                <Paperclip className="h-4 w-4" />
+                <span className="text-xs">{task.files} files</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div> */}
-    </div>
-    
+      </div>
     </Link>
   );
 
@@ -326,7 +360,7 @@ const ProjectProfile = () => {
               <div className="w-3 h-3 rounded-full border-2 border-purple-300"></div>
               <h2 className="font-semibold text-gray-700">To Do</h2>
               <span className="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
-                {tasks.filter((t)=>t.status=="Todo").length}
+                {tasks.filter((t) => t.status == "Todo").length}
               </span>
             </div>
             <button className="text-primary hover:text-purple-700">
@@ -335,7 +369,9 @@ const ProjectProfile = () => {
           </div>
 
           <div className="space-y-3">
-            {tasks.filter((t)=>t.status=="Todo").map((task) => renderTask(task))}
+            {tasks
+              .filter((t) => t.status == "Todo")
+              .map((task) => renderTask(task))}
           </div>
         </div>
 
@@ -346,7 +382,7 @@ const ProjectProfile = () => {
               <div className="w-3 h-3 rounded-full border-2 border-orange-300"></div>
               <h2 className="font-semibold text-gray-700">On Progress</h2>
               <span className="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
-                {tasks.filter((t)=>t.status=="InProgress").length}
+                {tasks.filter((t) => t.status == "InProgress").length}
               </span>
             </div>
             <button className="text-primary hover:text-purple-700">
@@ -355,7 +391,9 @@ const ProjectProfile = () => {
           </div>
 
           <div className="space-y-3">
-            {tasks.filter((t)=>t.status=="InProgress").map((task) => renderTask(task))}
+            {tasks
+              .filter((t) => t.status == "InProgress")
+              .map((task) => renderTask(task))}
           </div>
         </div>
 
@@ -366,7 +404,7 @@ const ProjectProfile = () => {
               <div className="w-3 h-3 rounded-full border-2 border-green-300"></div>
               <h2 className="font-semibold text-gray-700">Done</h2>
               <span className="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
-                {tasks.filter((t)=>t.status=="Completed").length}
+                {tasks.filter((t) => t.status == "Completed").length}
               </span>
             </div>
             <button className="text-primary hover:text-purple-700">
@@ -375,7 +413,9 @@ const ProjectProfile = () => {
           </div>
 
           <div className="space-y-3">
-            {tasks.filter((t)=>t.status=="Completed").map((task) => renderTask(task))}
+            {tasks
+              .filter((t) => t.status == "Completed")
+              .map((task) => renderTask(task))}
           </div>
         </div>
       </div>

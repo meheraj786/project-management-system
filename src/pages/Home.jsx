@@ -104,7 +104,7 @@ const Home = () => {
     },
     {
       title: "Completed",
-      value: tasks.filter((t) => t.status == "Done").length,
+      value: tasks.filter((t) => t.status == "Completed").length,
       icon: Award,
       color: "bg-green-500",
     },

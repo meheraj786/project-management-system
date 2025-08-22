@@ -17,13 +17,18 @@ import {
   Trash2,
 } from "lucide-react";
 import { useParams } from "react-router";
-import { getDatabase, onValue, ref } from "firebase/database";
+import { getDatabase, onValue, push, ref, set } from "firebase/database";
 import moment from "moment";
 import AddAssigneeModal from "../layouts/AddAssigneeModal";
+import SubtasksComponent from "../components/subTaskComponent/SubTaskComponent";
+import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
 
 const TaskDetailPage = () => {
   const [taskDetail, setTaskDetail] = useState(null);
+  const [comments, setComments]= useState([])
   const { id } = useParams();
+  const user = useSelector((state) => state.userInfo.value);
   const db = getDatabase();
   const [newComment, setNewComment] = useState("");
   const [checkedItems, setCheckedItems] = useState({
@@ -37,29 +42,32 @@ const TaskDetailPage = () => {
   const [projectMembers, setProjectMembers] = useState([]);
   const [assignee, setAssignee] = useState([]);
   const [listForAssignee, setListForAssignee] = useState([]);
+  const [addSubTaskMode, setAddSubTaskMode] = useState(false);
 
-useEffect(() => {
-  const starCountRef = ref(db, "members/");
-  onValue(starCountRef, (snapshot) => {
-    let arr = [];
-    snapshot.forEach((item) => {
-      const members = item.val();
-      arr.unshift({ ...members, id: item.key });
+  useEffect(() => {
+    const starCountRef = ref(db, "members/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const members = item.val();
+        arr.unshift({ ...members, id: item.key });
+      });
+
+      const projectMembers = arr.filter(
+        (m) => m.projectId == taskDetail.projectId
+      );
+      setProjectMembers(projectMembers);
+
+      setListForAssignee(() =>
+        projectMembers.filter(
+          (a) =>
+            !assignee.map((m) => m.assigneeId).includes(a.memberId) &&
+            a.projectId == taskDetail?.projectId
+        )
+      );
     });
-    
-    const projectMembers = arr.filter((m) => m.projectId == taskDetail.projectId);
-    setProjectMembers(projectMembers);
-    
-    setListForAssignee(() => 
-      projectMembers.filter((a) => 
-        !assignee.map((m) => m.assigneeId).includes(a.memberId) && a.projectId==taskDetail?.projectId
-      )
-    );
-  });
-}, [db, taskDetail, assignee]);
-  console.log(listForAssignee, "list");
-  console.log(projectMembers, "mem");
-  
+  }, [db, taskDetail, assignee]);
+
   useEffect(() => {
     const starCountRef = ref(db, "assignee/");
     onValue(starCountRef, (snapshot) => {
@@ -77,8 +85,6 @@ useEffect(() => {
     });
   }, [db, taskDetail]);
 
-  console.log();
-
   useEffect(() => {
     const taskRef = ref(db, "tasks/");
     onValue(taskRef, (snapshot) => {
@@ -89,85 +95,48 @@ useEffect(() => {
       setTaskDetail(arr.find((t) => t.id == id));
     });
   }, [db, id]);
+  useEffect(() => {
+    const taskRef = ref(db, "comment/");
+    onValue(taskRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        if (item.val().taskId==taskDetail.id) {
+          arr.push({ ...item.val(), id: item.key });
+        }
+      });
+      setComments(arr);
+    });
+  }, [db, taskDetail]);
 
-  const teamMembers = [
-    {
-      id: 1,
-      name: "John Smith",
-      avatar: "bg-blue-500",
-      initial: "J",
-      role: "Project Manager",
-    },
-    {
-      id: 2,
-      name: "Sarah Wilson",
-      avatar: "bg-green-500",
-      initial: "S",
-      role: "UI/UX Designer",
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      avatar: "bg-purple-500",
-      initial: "M",
-      role: "Developer",
-    },
-  ];
 
-  const comments = [
-    {
-      id: 1,
-      author: "Sarah Wilson",
-      avatar: "bg-green-500",
-      initial: "S",
-      time: "2 hours ago",
-      content:
-        "Great ideas! I think we should focus more on user experience aspects during our brainstorming session.",
-    },
-    {
-      id: 2,
-      author: "John Smith",
-      avatar: "bg-blue-500",
-      initial: "J",
-      time: "4 hours ago",
-      content:
-        "I've added some initial thoughts to the document. Let's schedule a meeting to discuss these ideas further.",
-    },
-    {
-      id: 3,
-      author: "Mike Johnson",
-      avatar: "bg-purple-500",
-      initial: "M",
-      time: "1 day ago",
-      content:
-        "From a technical perspective, we need to consider the feasibility of implementation for each idea.",
-    },
-  ];
-
-  const subtasks = [
-    { id: 1, title: "Research user pain points", completed: true },
-    { id: 2, title: "Define problem statements", completed: false },
-    { id: 3, title: "Generate solution ideas", completed: false },
-    { id: 4, title: "Prioritize ideas by impact", completed: true },
-  ];
-
-  const attachments = [
-    { id: 1, name: "brainstorming-notes.pdf", size: "2.4 MB", type: "pdf" },
-    { id: 2, name: "user-research-data.xlsx", size: "1.8 MB", type: "excel" },
-    { id: 3, name: "wireframes-v1.fig", size: "5.2 MB", type: "figma" },
-  ];
-
-  const handleCheckboxChange = (id) => {
-    setCheckedItems((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
   const priorityStyles = {
     Low: "bg-blue-100 text-blue-600",
     Medium: "bg-yellow-100 text-yellow-600",
     High: "bg-orange-100 text-orange-600",
     Critical: "bg-red-100 text-red-600",
+  };
+  const handleAddComment = async () => {
+    if (newComment.trim()) {
+      try {
+        await set(push(ref(db, "comment/")), {
+          taskTitle: newComment,
+          whoCommentName: user?.displayName || "Unknown User",
+          whoCommentId: user?.uid,
+          whoCommentImage: user?.photoURL || "",
+          taskId: taskDetail?.id,
+          projectId: taskDetail?.projectId,
+          adminId: taskDetail?.adminId,
+          createdAt: moment().format(),
+        });
+
+        toast.success("Subtask added successfully!");
+        setNewComment("");
+        setAddSubTaskMode(false);
+      } catch (error) {
+        console.error("Error adding subtask:", error);
+        toast.error("Failed to add subtask");
+      }
+    }
   };
 
   const renderAvatar = (member) => (
@@ -233,7 +202,7 @@ useEffect(() => {
                   >
                     {taskDetail?.priority}
                   </span>
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-600">
+                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-primary">
                     {taskDetail?.status}
                   </span>
                 </div>
@@ -251,48 +220,7 @@ useEffect(() => {
             </div>
 
             {/* Subtasks */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  Subtasks
-                </h2>
-                <button className="text-purple-600 hover:text-purple-700">
-                  <Plus className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {subtasks.map((subtask) => (
-                  <div
-                    key={subtask.id}
-                    className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
-                  >
-                    <button
-                      onClick={() => handleCheckboxChange(subtask.id)}
-                      className="flex-shrink-0"
-                    >
-                      {checkedItems[subtask.id] ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <Circle className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
-                    <span
-                      className={`flex-1 ${
-                        checkedItems[subtask.id]
-                          ? "line-through text-gray-500"
-                          : "text-gray-700"
-                      }`}
-                    >
-                      {subtask.title}
-                    </span>
-                    <button className="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <SubtasksComponent task={taskDetail} />
 
             {/* Comments */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -303,18 +231,18 @@ useEffect(() => {
               {/* New Comment */}
               <div className="flex space-x-3 mb-6">
                 <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                  U
+                  <img src={user?.photoURL} className="w-full h-full object-cover rounded-full" alt="" />
                 </div>
                 <div className="flex-1">
                   <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Write a comment..."
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none"
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"
                     rows="3"
                   />
                   <div className="flex justify-end mt-2">
-                    <button className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2">
+                    <button onClick={handleAddComment} className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2">
                       <Send className="h-4 w-4" />
                       <span>Comment</span>
                     </button>
@@ -327,22 +255,22 @@ useEffect(() => {
                 {comments.map((comment) => (
                   <div key={comment.id} className="flex space-x-3">
                     <div
-                      className={`w-8 h-8 rounded-full ${comment.avatar} flex items-center justify-center text-white text-xs font-medium`}
+                      className={`w-8 h-8 rounded-full  flex items-center justify-center text-white text-xs font-medium`}
                     >
-                      {comment.initial}
+                      <img src={user?.photoURL} className="w-full h-full object-cover rounded-full" alt="" />
                     </div>
                     <div className="flex-1">
-                      <div className="bg-gray-50 rounded-lg p-3">
+                      <div className={`bg-gray-50 ${comment.whoCommentId==comment.adminId && "bg-red-50"} rounded-lg p-3`}>
                         <div className="flex items-center space-x-2 mb-1">
                           <span className="font-medium text-gray-800">
-                            {comment.author}
+                            {comment.whoCommentName}
                           </span>
                           <span className="text-xs text-gray-500">
-                            {comment.time}
+                            {moment(comment.time).fromNow()}
                           </span>
                         </div>
                         <p className="text-gray-700 text-sm">
-                          {comment.content}
+                          {comment.taskTitle}
                         </p>
                       </div>
                     </div>
