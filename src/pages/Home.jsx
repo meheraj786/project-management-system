@@ -98,13 +98,13 @@ const Home = () => {
     },
     {
       title: "In Progress",
-      value: tasks.filter((t)=>t.status=="InProgress").length,
+      value: tasks.filter((t) => t.status == "InProgress").length,
       icon: Clock,
       color: "bg-orange-500",
     },
     {
       title: "Completed",
-      value: tasks.filter((t)=>t.status=="Done").length,
+      value: tasks.filter((t) => t.status == "Done").length,
       icon: Award,
       color: "bg-green-500",
     },
@@ -241,7 +241,7 @@ const Home = () => {
       assignee: { name: "M", color: "bg-primary" },
     },
   ];
-    const priorityStyles = {
+  const priorityStyles = {
     Low: "bg-blue-100 text-blue-600",
     Medium: "bg-yellow-100 text-yellow-600",
     High: "bg-orange-100 text-orange-600",
@@ -420,28 +420,28 @@ const Home = () => {
               <div className="p-6 space-y-4">
                 {projects.map((project) => (
                   <Link to={`/project/${project.id}`}>
-                  <div
-                    key={project.id}
-                    className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <h3 className="font-semibold text-gray-800">
-                          {project.title}
-                        </h3>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            project.status == "Todo"
-                              ? "bg-purple-700 text-white"
-                              : project.status == "Progress"
-                              ? "bg-yellow-500 text-white"
-                              : "bg-green-500 text-white"
-                          } `}
-                        >
-                          {project.status}
-                        </span>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium 
+                    <div
+                      key={project.id}
+                      className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <h3 className="font-semibold text-gray-800">
+                            {project.title}
+                          </h3>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              project.status == "Todo"
+                                ? "bg-purple-700 text-white"
+                                : project.status == "Progress"
+                                ? "bg-yellow-500 text-white"
+                                : "bg-green-500 text-white"
+                            } `}
+                          >
+                            {project.status}
+                          </span>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium 
     ${
       project.priority == "Low"
         ? "bg-green-100 text-green-600"
@@ -449,16 +449,16 @@ const Home = () => {
         ? "bg-yellow-100 text-yellow-600"
         : "bg-red-100 text-red-600"
     }`}
-                        >
-                          {project.priority}
-                        </span>
+                          >
+                            {project.priority}
+                          </span>
+                        </div>
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
                       </div>
-                      <button className="text-gray-400 hover:text-gray-600">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <p
-                      className={`px-2 py-1 rounded mb-4 text-xs font-medium
+                      <p
+                        className={`px-2 py-1 rounded mb-4 text-xs font-medium
     ${
       project.category === "Development"
         ? "bg-blue-100 text-blue-700"
@@ -470,60 +470,60 @@ const Home = () => {
         ? "bg-teal-100 text-teal-700"
         : "bg-gray-100 text-gray-700"
     }`}
-                    >
-                      {project.category}
-                    </p>
+                      >
+                        {project.category}
+                      </p>
 
-                    <p className="text-sm text-gray-500 mt-2 mb-2 line-clamp-1">
-                      {project.description}
-                    </p>
+                      <p className="text-sm text-gray-500 mt-2 mb-2 line-clamp-1">
+                        {project.description}
+                      </p>
 
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-1">
-                          {projectMembers
-                            .filter((p) => p.projectId == project.id)
-                            .map((member, idx) => (
-                              <div
-                                key={idx}
-                                className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs -ml-1 first:ml-0 border border-white`}
-                              >
-                                <img
-                                  src={member.memberImage}
-                                  className="rounded-full"
-                                  alt=""
-                                />
-                              </div>
-                            ))}
-                          <span className="text-[12px] text-primary">
-                            {" "}
-                            ...
-                            {projectMembers.filter(
-                              (p) => p.projectId == project.id
-                            ).length > 0
-                              ? projectMembers.filter(
-                                  (p) => p.projectId == project.id
-                                ).length
-                              : "no"}
-                            Members
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-1">
+                            {projectMembers
+                              .filter((p) => p.projectId == project.id)
+                              .map((member, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs -ml-1 first:ml-0 border border-white`}
+                                >
+                                  <img
+                                    src={member.memberImage}
+                                    className="w-full h-full object-cover rounded-full"
+                                    alt=""
+                                  />
+                                </div>
+                              ))}
+                            <span className="text-[12px] text-primary">
+                              {" "}
+                              ...
+                              {projectMembers.filter(
+                                (p) => p.projectId == project.id
+                              ).length > 0
+                                ? projectMembers.filter(
+                                    (p) => p.projectId == project.id
+                                  ).length
+                                : "no"}
+                              Members
+                            </span>
+                          </div>
+                          <span className="text-sm text-gray-600">
+                            {/* {project.tasks.completed}/{project.tasks.total} tasks */}
                           </span>
                         </div>
-                        <span className="text-sm text-gray-600">
-                          {/* {project.tasks.completed}/{project.tasks.total} tasks */}
+                        <span className="text-sm text-gray-500">
+                          Due: {project.endDate}
                         </span>
                       </div>
-                      <span className="text-sm text-gray-500">
-                        Due: {project.endDate}
-                      </span>
-                    </div>
 
-                    {/* <div className="w-full bg-gray-200 rounded-full h-2">
+                      {/* <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-primary h-2 rounded-full transition-all"
                         style={{ width: `${project.progress}%` }}
                       ></div>
                     </div> */}
-                  </div>
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -540,45 +540,47 @@ const Home = () => {
               </div>
 
               <div className="p-6 space-y-4">
-                {tasks.filter((t)=>t.status=="Todo").map((task) => (
-                // {tasks.map((task) => (
-                  <Link to={`/task/${task.id}`}>
-                  <div
-                    key={task.id}
-                    className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
-                  >
-                    <div
-                      className={`w-6 h-6 ${
-                      priorityStyles[task?.priority] ||
-                      "bg-gray-100 text-gray-600"
-                    } rounded-full flex items-center justify-center text-white text-xs flex-shrink-0`}
-                    >
-                      {task?.title?.charAt(0)?.toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-800 text-sm truncate">
-                        {task?.title}
-                      </h4>
-                      <p className="text-xs text-gray-500 line-clamp-1 mb-2">
-                        {task?.description}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${
-                      priorityStyles[task?.priority] ||
-                      "bg-gray-100 text-gray-600"
-                    }`}
+                {tasks
+                  .filter((t) => t.status == "Todo")
+                  .map((task) => (
+                    // {tasks.map((task) => (
+                    <Link to={`/task/${task.id}`}>
+                      <div
+                        key={task.id}
+                        className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <div
+                          className={`w-6 h-6 ${
+                            priorityStyles[task?.priority] ||
+                            "bg-gray-100 text-gray-600"
+                          } rounded-full flex items-center justify-center text-white text-xs flex-shrink-0`}
                         >
-                          {task?.priority}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {task?.dueDate}
-                        </span>
+                          {task?.title?.charAt(0)?.toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-800 text-sm truncate">
+                            {task?.title}
+                          </h4>
+                          <p className="text-xs text-gray-500 line-clamp-1 mb-2">
+                            {task?.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <span
+                              className={`px-2 py-1 rounded text-xs ${
+                                priorityStyles[task?.priority] ||
+                                "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {task?.priority}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {task?.dueDate}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  </Link>
-                ))}
+                    </Link>
+                  ))}
 
                 {/* <button className="w-full py-2 text-primary hover:text-purple-700 text-sm font-medium flex items-center justify-center space-x-1">
                   <Plus className="h-4 w-4" />

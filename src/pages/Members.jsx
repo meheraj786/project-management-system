@@ -214,7 +214,12 @@ const Members = () => {
                       {Object.keys(departmentIcons).map(
                         (dep) =>
                           departments.includes(dep) && (
-                            <span className="text-sm rounded-full bg-gray-50" key={dep}>{departmentIcons[dep]}</span>
+                            <span
+                              className="text-sm rounded-full bg-gray-50"
+                              key={dep}
+                            >
+                              {departmentIcons[dep]}
+                            </span>
                           )
                       )}
                     </div>
@@ -249,14 +254,15 @@ const Members = () => {
             >
               <div className="flex items-start justify-between mb-4">
                 <div
-                  className={`w-12 h-12 ${member.color} rounded-xl flex items-center justify-center text-white font-semibold text-lg`}
+                  className={`w-12 h-12 ${member.color} rounded-full flex items-center justify-center overflow-hidden`}
                 >
                   <img
                     src={member.profileImage}
-                    className="rounded-xl"
-                    alt=""
+                    alt={member.name}
+                    className="w-full h-full object-cover rounded-full"
                   />
                 </div>
+
                 <div className="relative">
                   <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors group">
                     <MoreHorizontal className="w-5 h-5 text-gray-400" />

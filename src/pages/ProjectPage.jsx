@@ -175,7 +175,7 @@ const ProjectProfile = () => {
       key={member.id}
       className={`w-8 h-8 rounded-full  flex items-center justify-center text-white text-xs font-medium -ml-2 first:ml-0 border-2 border-white`}
     >
-      <img src={member.memberImage} className="rounded-full" alt="" />
+      <img src={member.memberImage} className="w-full h-full object-cover rounded-full" alt="" />
     </div>
   );
 
@@ -326,7 +326,7 @@ const ProjectProfile = () => {
               <div className="w-3 h-3 rounded-full border-2 border-purple-300"></div>
               <h2 className="font-semibold text-gray-700">To Do</h2>
               <span className="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
-                3
+                {tasks.filter((t)=>t.status=="Todo").length}
               </span>
             </div>
             <button className="text-primary hover:text-purple-700">
@@ -346,7 +346,7 @@ const ProjectProfile = () => {
               <div className="w-3 h-3 rounded-full border-2 border-orange-300"></div>
               <h2 className="font-semibold text-gray-700">On Progress</h2>
               <span className="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
-                2
+                {tasks.filter((t)=>t.status=="InProgress").length}
               </span>
             </div>
             <button className="text-primary hover:text-purple-700">
@@ -366,7 +366,7 @@ const ProjectProfile = () => {
               <div className="w-3 h-3 rounded-full border-2 border-green-300"></div>
               <h2 className="font-semibold text-gray-700">Done</h2>
               <span className="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
-                2
+                {tasks.filter((t)=>t.status=="Completed").length}
               </span>
             </div>
             <button className="text-primary hover:text-purple-700">

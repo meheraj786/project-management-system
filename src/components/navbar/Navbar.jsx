@@ -13,7 +13,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAuth, signOut } from "firebase/auth";
 import toast, { Toaster } from "react-hot-toast";
 import { setUser } from "../../features/userInfoSlice";
-import CurrentUserProvider from "../../context/CurrentUserProvider";
 import { UserContext } from "../../context/UserContext";
 
 const Navbar = () => {
@@ -112,7 +111,7 @@ const Navbar = () => {
                 </span>
               </div>
               <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-red-500 rounded-full flex items-center justify-center">
-                <img src={user?.photoURL} className="rounded-full" alt="" />
+                <img src={user?.photoURL} className="w-full h-full object-cover rounded-full" alt="" />
               </div>
               <ChevronDown
                 className={`h-4 w-4 text-gray-400 transition-transform ${
@@ -127,7 +126,7 @@ const Navbar = () => {
                 <div className="px-4 py-3 border-b border-gray-100">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-red-500 rounded-full flex items-center justify-center">
-                      <img className="rounded-full" src={user?.photoURL}/>
+                      <img className="w-full h-full object-cover rounded-full" src={user?.photoURL}/>
                     </div>
                     <div>
                       <p className="font-medium text-gray-800">

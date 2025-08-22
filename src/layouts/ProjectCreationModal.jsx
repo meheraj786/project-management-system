@@ -151,7 +151,8 @@ const handleSubmit = (e) => {
           projectId: projectId,
           memberId: m.id,
           memberImage: m.profileImage,
-          memberName: m.name
+          memberName: m.name,
+          memberRole: m.role || ""
         });
       });
       toast.success("Project Created Successfully");

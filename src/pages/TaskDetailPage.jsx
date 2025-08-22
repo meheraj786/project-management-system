@@ -19,6 +19,7 @@ import {
 import { useParams } from "react-router";
 import { getDatabase, onValue, ref } from "firebase/database";
 import moment from "moment";
+import AddAssigneeModal from "../layouts/AddAssigneeModal";
 
 const TaskDetailPage = () => {
   const [taskDetail, setTaskDetail] = useState(null);
@@ -31,6 +32,52 @@ const TaskDetailPage = () => {
     3: false,
     4: true,
   });
+  const [activeAssigneeModal, setActiveAssigneeModal] = useState(false);
+
+  const [projectMembers, setProjectMembers] = useState([]);
+  const [assignee, setAssignee] = useState([]);
+  const [listForAssignee, setListForAssignee] = useState([]);
+
+useEffect(() => {
+  const starCountRef = ref(db, "members/");
+  onValue(starCountRef, (snapshot) => {
+    let arr = [];
+    snapshot.forEach((item) => {
+      const members = item.val();
+      arr.unshift({ ...members, id: item.key });
+    });
+    
+    const projectMembers = arr.filter((m) => m.projectId == taskDetail.projectId);
+    setProjectMembers(projectMembers);
+    
+    setListForAssignee(() => 
+      projectMembers.filter((a) => 
+        !assignee.map((m) => m.assigneeId).includes(a.memberId) && a.projectId==taskDetail?.projectId
+      )
+    );
+  });
+}, [db, taskDetail, assignee]);
+  console.log(listForAssignee, "list");
+  console.log(projectMembers, "mem");
+  
+  useEffect(() => {
+    const starCountRef = ref(db, "assignee/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const members = item.val();
+        arr.unshift({ ...members, id: item.key });
+      });
+      setAssignee(
+        arr.filter(
+          (m) =>
+            m.projectId == taskDetail.projectId && m.taskId == taskDetail.id
+        )
+      );
+    });
+  }, [db, taskDetail]);
+
+  console.log();
 
   useEffect(() => {
     const taskRef = ref(db, "tasks/");
@@ -42,8 +89,6 @@ const TaskDetailPage = () => {
       setTaskDetail(arr.find((t) => t.id == id));
     });
   }, [db, id]);
-
-  console.log(taskDetail, "taskDetail");
 
   const teamMembers = [
     {
@@ -127,14 +172,25 @@ const TaskDetailPage = () => {
 
   const renderAvatar = (member) => (
     <div
-      className={`w-8 h-8 rounded-full ${member.avatar} flex items-center justify-center text-white text-xs font-medium`}
+      className={`w-8 h-8 rounded-full  flex items-center justify-center text-white text-xs font-medium`}
     >
-      {member.initial}
+      <img
+        src={member.assigneeImage}
+        className="rounded-full w-full h-full object-cover"
+        alt=""
+      />
     </div>
   );
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {activeAssigneeModal && (
+        <AddAssigneeModal
+          taskDetail={taskDetail}
+          users={listForAssignee}
+          onClose={() => setActiveAssigneeModal(false)}
+        />
+      )}
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -344,20 +400,25 @@ const TaskDetailPage = () => {
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-800">Assignees</h3>
-                <button className="text-purple-600 hover:text-purple-700">
+                <button
+                  onClick={() => setActiveAssigneeModal(true)}
+                  className="text-purple-600 hover:text-purple-700"
+                >
                   <Plus className="h-5 w-5" />
                 </button>
               </div>
 
               <div className="space-y-3">
-                {teamMembers.map((member) => (
-                  <div key={member.id} className="flex items-center space-x-3">
+                {assignee.map((member) => (
+                  <div key={member?.id} className="flex items-center space-x-3">
                     {renderAvatar(member)}
                     <div className="flex-1">
                       <p className="font-medium text-gray-800 text-sm">
-                        {member.name}
+                        {member?.assigneeName}
                       </p>
-                      <p className="text-xs text-gray-500">{member.role}</p>
+                      <p className="text-xs text-gray-500">
+                        {member.assigneeRole}
+                      </p>
                     </div>
                     <button className="text-gray-400 hover:text-gray-600">
                       <MoreHorizontal className="h-4 w-4" />
