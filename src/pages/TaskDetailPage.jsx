@@ -15,6 +15,9 @@ import {
   Circle,
   Edit,
   Trash2,
+  Upload,
+  Image,
+  X,
 } from "lucide-react";
 import { Link, useParams } from "react-router";
 import {
@@ -58,6 +61,8 @@ const TaskDetailPage = () => {
   const [editCommentModal, setEditCommentModal] = useState(false);
   const [editComment, setEditComment] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
+  const [image, setImage] = useState("");
+  const [imageList, setImageList] = useState([]);
 
   const handleEditComment = (comment) => {
     setEditComment(comment);
@@ -156,6 +161,19 @@ const TaskDetailPage = () => {
   }, [db, taskDetail]);
 
   useEffect(() => {
+    const taskRef = ref(db, "taskimage/");
+    onValue(taskRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        if (item.val().taskId == taskDetail.id) {
+          arr.push({ ...item.val(), id: item.key });
+        }
+      });
+      setImageList(arr);
+    });
+  }, [db, id, taskDetail]);
+
+  useEffect(() => {
     const taskRef = ref(db, "tasks/");
     onValue(taskRef, (snapshot) => {
       let arr = [];
@@ -231,9 +249,49 @@ const TaskDetailPage = () => {
       .catch((err) => toast.error(err.message));
     setActiveMenu(null);
   };
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    const data = new FormData();
+
+    data.append("file", file);
+    data.append("upload_preset", "e-com app with firebase");
+    data.append("cloud_name", "dlrycnxnh");
+
+    const res = await fetch(
+      "https://api.cloudinary.com/v1_1/dlrycnxnh/image/upload",
+      {
+        method: "POST",
+        body: data,
+      }
+    );
+
+    const result = await res.json();
+    setImage(result.secure_url);
+  };
+  const addImage = () => {
+    if (image) {
+      set(push(ref(db, "taskimage/")), {
+        image: image,
+        adminId: taskDetail?.adminId,
+        projectId: taskDetail?.projectId,
+        taskId: taskDetail?.id,
+        whoAddId: user?.uid,
+        whoAddImage: user?.photoURL,
+        whoAddName: user?.displayName,
+      }).then(() => {
+        toast.success("Image Added");
+        setImage("");
+      });
+    }
+  };
+  const removeImage = (id) => {
+    remove(ref(db, "taskimage/" + id)).then(() => {
+      toast.success("Image Removed");
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen font-primary bg-gray-50">
       {activeAssigneeModal && (
         <AddAssigneeModal
           taskDetail={taskDetail}
@@ -351,9 +409,9 @@ const TaskDetailPage = () => {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link to={`/project/${taskDetail?.projectId}`}>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <ArrowLeft className="h-5 w-5 text-primary" />
-            </button>
+              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <ArrowLeft className="h-5 w-5 text-primary" />
+              </button>
             </Link>
             <h1 className="text-xl font-semibold text-gray-800">
               Task Details
@@ -379,6 +437,7 @@ const TaskDetailPage = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Task Header */}
+
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
@@ -405,6 +464,110 @@ const TaskDetailPage = () => {
               <p className="text-gray-600 leading-relaxed">
                 {taskDetail?.description}
               </p>
+            </div>
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100/50 backdrop-blur-sm">
+              {/* Upload Section */}
+              <div className="relative overflow-hidden flex items-center justify-start p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-100/50 rounded-xl hover:shadow-md transition-all duration-300 group">
+                <div className="flex  items-center gap-4">
+                  <div className="p-3 bg-white rounded-xl shadow-sm border border-blue-100/50 group-hover:scale-105 transition-transform duration-200">
+                    <Upload className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="image"
+                      className="text-sm font-semibold text-gray-800 cursor-pointer hover:text-blue-700 transition-colors duration-200 block"
+                    >
+                      Attach Images
+                    </label>
+                  </div>
+                </div>
+
+                <input
+                  id="image"
+                  onChange={handleImageChange}
+                  type="file"
+                  className="hidden"
+                />
+                {image && (
+                  <div className="relative overflow-hidden rounded-xl ">
+                    <img
+                      src={image}
+                      className="w-full h-18 ml-2 object-cover transition-transform duration-300"
+                    />
+
+                    <div className="absolute inset-0  to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                  </div>
+                )}
+
+                <div className="flex-1 flex justify-end gap-x-2 items-center">
+                  {
+                    image &&                                       <button
+                      onClick={() => setImage("")}
+                      className="  p-2 bg-white border-2 border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  }
+
+                  <button
+                    onClick={addImage}
+                    className="px-5  py-2 bg-gradient-to-r from-primary to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    Attach
+                  </button>
+                </div>
+
+                {/* Subtle background pattern */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/30 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+              </div>
+
+              {/* Images Display */}
+              {imageList.length > 0 && (
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg border border-emerald-100">
+                        <Image className="w-4 h-4 text-primary " />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-800">
+                        Attachments
+                      </span>
+                      <div className="px-3 py-1 bg-gradient-to-r from-primary to-blue-500 text-white text-xs font-bold rounded-full shadow-sm">
+                        {imageList.length}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    {imageList.map((img, index) => (
+                      <div key={img.id} className="relative group">
+                        <a href={img.image} target="_blank">
+                          <div className="relative overflow-hidden rounded-xl border-2 border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                            <img
+                              src={img.image}
+                              alt={`Attachment ${index + 1}`}
+                              className="w-full h-18 object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                          </div>
+                        </a>
+
+                        <button
+                          onClick={() => removeImage(img.id)}
+                          className="absolute -top-2 -right-2 p-1.5 bg-white border-2 border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Image index indicator */}
+                        <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-white/90 backdrop-blur-sm text-xs font-medium text-gray-700 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Subtasks */}

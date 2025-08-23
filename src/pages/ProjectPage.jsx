@@ -49,6 +49,7 @@ const ProjectProfile = () => {
   const [assignee, setAssignee] = useState([]);
   const [allMembers, setAllMembers] = useState([]);
   const [membersId, setMembersId] = useState([]);
+  const [taskImageList, setTaskImageList] = useState([]);
 
   useEffect(() => {
     const starCountRef = ref(db, "projects/");
@@ -124,6 +125,18 @@ const ProjectProfile = () => {
       setComments(arr);
     });
   }, [db, projectData]);
+  useEffect(() => {
+    const taskRef = ref(db, "taskimage/");
+    onValue(taskRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        if (item.val().projectId == projectData.id) {
+          arr.push({ ...item.val(), id: item.key });
+        }
+      });
+      setTaskImageList(arr);
+    });
+  }, [db, id, projectData]);
 
   const renderAvatar = (member) => (
     <div
@@ -176,13 +189,11 @@ const ProjectProfile = () => {
           </p>
         )}
 
-        {task.image && (
+        {taskImageList.filter((i) => i.taskId == task.id)[0] && (
           <div
-            className={`w-full h-32 rounded-lg mb-4 ${task.image} flex items-center justify-center`}
+            className={`w-full h-32 rounded-lg mb-4 flex items-center justify-center`}
           >
-            <div className="w-16 h-16 bg-white bg-opacity-50 rounded-lg flex items-center justify-center">
-              <Eye className="h-8 w-8 text-gray-400" />
-            </div>
+              <img src={taskImageList.filter((i) => i.taskId == task.id)[0].image} className="w-full h-full rounded-lg object-cover object-cover" alt="" />
           </div>
         )}
 
@@ -216,12 +227,10 @@ const ProjectProfile = () => {
                 {comments.filter((c) => c.taskId == task.id).length} comments
               </span>
             </div>
-            {task.files > 0 && (
               <div className="flex items-center space-x-1">
                 <Paperclip className="h-4 w-4" />
-                <span className="text-xs">{task.files} files</span>
+                <span className="text-xs">{taskImageList.filter((i) => i.taskId == task.id).length} files</span>
               </div>
-            )}
           </div>
         </div>
       </div>
