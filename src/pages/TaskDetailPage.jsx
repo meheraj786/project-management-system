@@ -55,6 +55,29 @@ const TaskDetailPage = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState(null);
+  const [editCommentModal, setEditCommentModal] = useState(false);
+  const [editComment, setEditComment] = useState(null);
+  const [activeMenu, setActiveMenu] = useState(null);
+
+  const handleEditComment = (comment) => {
+    setEditComment(comment);
+    setEditCommentModal(true);
+  };
+
+  const handleUpdateComment = () => {
+    if (!editComment) return;
+
+    update(ref(db, "comment/" + editComment.id), {
+      ...editComment,
+      taskTitle: editComment.taskTitle,
+    })
+      .then(() => {
+        toast.success("Comment updated!");
+        setEditCommentModal(false);
+        setActiveMenu(null)
+      })
+      .catch((err) => toast.error(err.message));
+  };
 
   useEffect(() => {
     if (taskDetail) {
@@ -90,7 +113,6 @@ const TaskDetailPage = () => {
   const toggleDropdown = (id) => {
     setOpenDropdown(openDropdown === id ? null : id);
   };
-  console.log(taskDetail, "task");
 
   useEffect(() => {
     const starCountRef = ref(db, "members/");
@@ -203,6 +225,12 @@ const TaskDetailPage = () => {
       />
     </div>
   );
+  const handleDeleteComment = (commentId) => {
+    remove(ref(db, "comment/" + commentId))
+      .then(() => toast.success("Comment deleted!"))
+      .catch((err) => toast.error(err.message));
+      setActiveMenu(null)
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -288,6 +316,36 @@ const TaskDetailPage = () => {
           </div>
         </div>
       )}
+      {editCommentModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white w-[400px] rounded-xl shadow-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">Edit Comment</h2>
+            <textarea
+              value={editComment.taskTitle}
+              onChange={(e) =>
+                setEditComment({ ...editComment, taskTitle: e.target.value })
+              }
+              className="w-full border p-3 rounded-lg"
+              rows="3"
+            />
+            <div className="flex justify-end mt-4 gap-2">
+              <button
+                onClick={() => setEditCommentModal(false)}
+                className="px-4 py-2 bg-gray-200 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateComment}
+                className="px-4 py-2 bg-primary text-white rounded-lg"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -401,7 +459,7 @@ const TaskDetailPage = () => {
                     <div className="flex-1">
                       <div
                         className={`bg-gray-50 ${
-                          comment.whoCommentId == comment.adminId && "bg-red-50"
+                          comment.whoCommentId == comment.adminId && "bg-red-50/40"
                         } rounded-lg p-3`}
                       >
                         <div className="flex items-center space-x-2 mb-1">
@@ -416,6 +474,31 @@ const TaskDetailPage = () => {
                           {comment.taskTitle}
                         </p>
                       </div>
+                    </div>
+                    <div className="relative">
+                      <button
+                        onClick={() => setActiveMenu((prev)=>prev===comment.id ? null : comment.id)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+
+                      {activeMenu === comment.id && (
+                        <div className="absolute right-0 mt-2 w-28 bg-white border rounded-lg shadow-md">
+                          <button
+                            onClick={() => handleEditComment(comment)}
+                            className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="block w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-100"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
