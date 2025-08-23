@@ -10,6 +10,8 @@ import {
   MoreHorizontal,
   Lightbulb,
   Edit3,
+  ArrowBigRight,
+  ArrowRight,
 } from "lucide-react";
 import { getDatabase, onValue, ref } from "firebase/database";
 import { useSelector } from "react-redux";
@@ -104,14 +106,16 @@ const Sidebar = () => {
 
         {/* My Projects Section */}
         <div className="mt-8">
-          <div className="flex items-center justify-between px-3 mb-4">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <Link to={`/allprojects`}>
+          <div className="flex items-center group justify-between px-3 mb-4">
+            <h3 className="text-xs font-semibold text-primary uppercase tracking-wide">
               MY PROJECTS
             </h3>
-            <button className="text-gray-400 hover:text-gray-600 transition-colors">
-              <Plus className="h-4 w-4" />
+            <button className="text-primary group-hover:translate-x-2 transition-all duration-200 hover:text-gray-600">
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
+          </Link>
 
           <div className="space-y-2">
             {projects.map((project, index) => {

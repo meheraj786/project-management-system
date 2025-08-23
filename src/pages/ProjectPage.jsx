@@ -17,11 +17,23 @@ import {
   Clock,
   AlertCircle,
   Target,
+  Users,
+  X,
+  Check,
 } from "lucide-react";
 import { AddTaskModal } from "../layouts/AddTaskModal";
 import { Link, useParams } from "react-router";
-import { getDatabase, onValue, ref } from "firebase/database";
+import {
+  getDatabase,
+  onValue,
+  push,
+  ref,
+  remove,
+  set,
+} from "firebase/database";
 import ProjectUpdateModal from "../layouts/ProjectUpdateModal";
+import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
 
 const ProjectProfile = () => {
   const [addTaskPop, setAddTaskPop] = useState(false);
@@ -30,10 +42,14 @@ const ProjectProfile = () => {
   const [members, setMembers] = useState([]);
   const db = getDatabase();
   const { id } = useParams();
+  const user = useSelector((state) => state.userInfo.value);
   const [updateProjectModal, setUpdateProjectModal] = useState(false);
   const [comments, setComments] = useState([]);
-
+  const [membersPop, setMembersPop] = useState(false);
   const [assignee, setAssignee] = useState([]);
+  const [allMembers, setAllMembers] = useState([]);
+  const [membersId, setMembersId] = useState([]);
+
   useEffect(() => {
     const starCountRef = ref(db, "projects/");
     onValue(starCountRef, (snapshot) => {
@@ -59,6 +75,19 @@ const ProjectProfile = () => {
     });
   }, [db, id]);
   useEffect(() => {
+    const starCountRef = ref(db, "users/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const projects = item.val();
+        if (projects.adminId == user?.uid) {
+          arr.unshift({ ...projects, id: item.key });
+        }
+      });
+      setAllMembers(arr);
+    });
+  }, [db, id]);
+  useEffect(() => {
     const starCountRef = ref(db, "members/");
     onValue(starCountRef, (snapshot) => {
       let arr = [];
@@ -68,6 +97,7 @@ const ProjectProfile = () => {
           arr.unshift({ ...projects, id: item.key });
         }
         setMembers(arr);
+        setMembersId(arr.map((m) => m.memberId));
       });
     });
   }, [db, id]);
@@ -119,7 +149,7 @@ const ProjectProfile = () => {
             <span
               className={`px-2 py-1 rounded text-xs font-medium ${
                 task.priority === "Low"
-                  ? "bg-blue-100 text-blue-600"
+                  ? "bg-blue-100 text-primary"
                   : task.priority === "Medium"
                   ? "bg-yellow-100 text-yellow-600"
                   : task.priority === "High"
@@ -198,6 +228,24 @@ const ProjectProfile = () => {
     </Link>
   );
 
+  const addMemberHandler = (m) => {
+    set(push(ref(db, "members/")), {
+      projectId: projectData.id,
+      memberId: m.id,
+      memberImage: m.profileImage,
+      memberName: m.name,
+      memberRole: m.role || "",
+    }).then(() => toast.success("Member Added"));
+  };
+  const removeMemberHandler = (id) => {
+    const removeid = members.find((m) => m.memberId == id);
+    const assigneeRemoveId = assignee.find((m) => m.assigneeId == id);
+
+    remove(ref(db, "members/" + removeid.id)).then(() => {
+      toast.success("Member Removed");
+      remove(ref(db, "assignee/" + assigneeRemoveId.id));
+    });
+  };
   return (
     <div className="max-w-7xl mt-10 mx-auto">
       {addTaskPop && (
@@ -211,6 +259,115 @@ const ProjectProfile = () => {
           projectData={projectData}
           onClose={() => setUpdateProjectModal(false)}
         />
+      )}
+      {membersPop && (
+        <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black/40 backdrop-blur-sm z-50">
+          <div className="max-w-md w-full mx-4 bg-white rounded-xl shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="bg-primary p-4 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  <h3 className="text-lg font-semibold">Add Team Members</h3>
+                </div>
+                <button
+                  onClick={() => setMembersPop(false)}
+                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Members List */}
+            <div className="max-h-96 overflow-y-auto">
+              <div className="p-2">
+                {allMembers.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Users className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                    <p>No members found</p>
+                  </div>
+                ) : (
+                  allMembers.map((member) => {
+                    const isSelected = membersId.includes(member.id);
+
+                    return (
+                      <div
+                        key={member.id}
+                        className={`flex items-center justify-between p-3 rounded-lg mb-2 transition-all duration-200 ${
+                          isSelected
+                            ? "bg-blue-50 border-2 border-blue-200"
+                            : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Profile Image */}
+                          <div className="relative">
+                            <img
+                              src={member.profileImage}
+                              alt={member.name}
+                              className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                            />
+                            {isSelected && (
+                              <div className="absolute -top-1 -right-1 bg-primary rounded-full p-0.5">
+                                <Check className="w-3 h-3 text-white" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Member Info */}
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {member.name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {member.email}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Action Button */}
+                        {isSelected ? (
+                          <button
+                            onClick={() => removeMemberHandler(member.id)}
+                            className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                          >
+                            <X className="w-4 h-4" />
+                            Remove
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => addMemberHandler(member)}
+                            className="px-4 py-2 bg-primary hover:bg-primary text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-4 py-3 border-t">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  {membersId.length} member{membersId.length !== 1 ? "s" : ""}{" "}
+                  selected
+                </p>
+                <button
+                  onClick={() => setMembersPop(false)}
+                  className="px-4 py-2 bg-primary hover:bg-primary text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       {/* Header */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-8">
@@ -233,9 +390,12 @@ const ProjectProfile = () => {
           {/* Members Section */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <span className="text-primary text-sm font-medium">
-                Manage Members
-              </span>
+              <button onClick={() => setMembersPop(true)}>
+                <span className="text-primary text-sm font-medium">
+                  Manage Members
+                </span>
+              </button>
+
               <div className="flex items-center">
                 {members.slice(0, 4).map((member, index) => (
                   <div key={index} className="-ml-2 first:ml-0">
@@ -403,7 +563,10 @@ const ProjectProfile = () => {
       {/* Filters and Actions */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <button onClick={()=>setUpdateProjectModal(true)} className="flex items-center space-x-2 px-4 py-2 border border-primary group hover:bg-primary hover:text-white rounded-lg bg-white  transition-colors">
+          <button
+            onClick={() => setUpdateProjectModal(true)}
+            className="flex items-center space-x-2 px-4 py-2 border border-primary group hover:bg-primary hover:text-white rounded-lg bg-white  transition-colors"
+          >
             <ChartBarBig className="h-4 w-4 group-hover:text-gray-200 text-gray-500" />
             <span className="text-sm group-hover:text-white text-gray-700">
               Change Status
@@ -419,13 +582,21 @@ const ProjectProfile = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          <button
-            onClick={() => setAddTaskPop(true)}
-            className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg bg-primary hover:bg-primary/70 transition-colors"
-          >
-            <Plus className="h-4 w-4 text-white" />
-            <span className="text-sm text-white">Add Task</span>
-          </button>
+          {projectData?.status == "Done" ? (
+            <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg  transition-colors">
+              <span className="text-sm text-primary/70">
+                Project Completed, Can't Add More Task
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setAddTaskPop(true)}
+              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg bg-primary hover:bg-primary/70 transition-colors"
+            >
+              <Plus className="h-4 w-4 text-white" />
+              <span className="text-sm text-white">Add Task</span>
+            </button>
+          )}
 
           <button className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center hover:bg-purple-700 transition-colors">
             <Grid3X3 className="h-5 w-5 text-white" />

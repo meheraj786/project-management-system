@@ -163,13 +163,20 @@ const SubtasksComponent = ({ task }) => {
             ({completedCount}/{subTaskList.length})
           </span>
         </h2>
-        <button
+        {
+          task?.status!=="Completed" ? <button
           onClick={() => setAddSubTaskMode(true)}
           className="flex items-center gap-2 px-3 py-2 text-primary hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
         >
           <Plus className="h-4 w-4" />
           <span className="text-sm font-medium">Add Subtask</span>
+        </button> : <button
+          className="flex items-center gap-2 px-3 py-2 text-primary/60  rounded-lg transition-colors"
+        >
+          <span className="text-sm font-medium">Task is Complete, can't add more Subtask</span>
         </button>
+        }
+        
       </div>
 
       <div className="space-y-2">
@@ -334,7 +341,7 @@ const SubtasksComponent = ({ task }) => {
         ))}
 
         {/* Empty state */}
-        {subTaskList.length === 0 && !addSubTaskMode && (
+        {subTaskList.length === 0 && !addSubTaskMode && task?.status!=="Completed" && (
           <div className="text-center py-8 text-gray-500">
             <Circle className="h-8 w-8 mx-auto mb-2 text-gray-300" />
             <p className="text-sm">No subtasks yet</p>

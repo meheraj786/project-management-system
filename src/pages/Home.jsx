@@ -48,7 +48,6 @@ const Home = () => {
       });
     });
   }, [db]);
-
   useEffect(() => {
     const starCountRef = ref(db, "members/");
     onValue(starCountRef, (snapshot) => {
@@ -410,10 +409,12 @@ const Home = () => {
                   <h2 className="text-xl font-semibold text-gray-800">
                     Recent Projects
                   </h2>
+                  <Link to={`/allprojects`}>
                   <button className="text-primary hover:text-purple-700 flex items-center space-x-1">
                     <span className="text-sm">View All</span>
                     <ArrowRight className="h-4 w-4" />
                   </button>
+                  </Link>
                 </div>
               </div>
 

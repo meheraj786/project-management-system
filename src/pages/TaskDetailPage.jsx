@@ -16,7 +16,7 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import {
   getDatabase,
   onValue,
@@ -74,7 +74,7 @@ const TaskDetailPage = () => {
       .then(() => {
         toast.success("Comment updated!");
         setEditCommentModal(false);
-        setActiveMenu(null)
+        setActiveMenu(null);
       })
       .catch((err) => toast.error(err.message));
   };
@@ -229,7 +229,7 @@ const TaskDetailPage = () => {
     remove(ref(db, "comment/" + commentId))
       .then(() => toast.success("Comment deleted!"))
       .catch((err) => toast.error(err.message));
-      setActiveMenu(null)
+    setActiveMenu(null);
   };
 
   return (
@@ -258,7 +258,7 @@ const TaskDetailPage = () => {
                   onChange={handleChange}
                   className="w-full mt-1 p-2 border rounded-lg"
                 >
-                  <option>Pending</option>
+                  <option>Todo</option>
                   <option>InProgress</option>
                   <option>Completed</option>
                 </select>
@@ -350,9 +350,11 @@ const TaskDetailPage = () => {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
+            <Link to={`/project/${taskDetail?.projectId}`}>
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
+              <ArrowLeft className="h-5 w-5 text-primary" />
             </button>
+            </Link>
             <h1 className="text-xl font-semibold text-gray-800">
               Task Details
             </h1>
@@ -432,13 +434,19 @@ const TaskDetailPage = () => {
                     rows="3"
                   />
                   <div className="flex justify-end mt-2">
-                    <button
-                      onClick={handleAddComment}
-                      className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
-                    >
-                      <Send className="h-4 w-4" />
-                      <span>Comment</span>
-                    </button>
+                    {taskDetail?.status == "Completed" ? (
+                      <button className=" text-primary/60 px-4 py-2 rounded-lg  transition-colors flex items-center space-x-2">
+                        <span>Task Is Complete, Can't Add More Comment</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleAddComment}
+                        className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                      >
+                        <Send className="h-4 w-4" />
+                        <span>Comment</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -459,7 +467,8 @@ const TaskDetailPage = () => {
                     <div className="flex-1">
                       <div
                         className={`bg-gray-50 ${
-                          comment.whoCommentId == comment.adminId && "bg-red-50/40"
+                          comment.whoCommentId == comment.adminId &&
+                          "bg-red-50/40"
                         } rounded-lg p-3`}
                       >
                         <div className="flex items-center space-x-2 mb-1">
@@ -477,7 +486,11 @@ const TaskDetailPage = () => {
                     </div>
                     <div className="relative">
                       <button
-                        onClick={() => setActiveMenu((prev)=>prev===comment.id ? null : comment.id)}
+                        onClick={() =>
+                          setActiveMenu((prev) =>
+                            prev === comment.id ? null : comment.id
+                          )
+                        }
                         className="text-gray-400 hover:text-gray-600"
                       >
                         <MoreHorizontal className="h-4 w-4" />
@@ -562,13 +575,20 @@ const TaskDetailPage = () => {
               <div className="flex items-center justify-between mb-4">
                 {" "}
                 <h3 className="font-semibold text-gray-800">Assignees</h3>{" "}
-                <button
-                  onClick={() => setActiveAssigneeModal(true)}
-                  className="text-purple-600 hover:text-purple-700"
-                >
-                  {" "}
-                  <Plus className="h-5 w-5" />{" "}
-                </button>{" "}
+                {taskDetail?.status == "Completed" ? (
+                  <button className="text-primary/60 text-xs">
+                    {" "}
+                    Task Complete, Can't Assignee More
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setActiveAssigneeModal(true)}
+                    className="text-primary hover:text-primary/70"
+                  >
+                    {" "}
+                    <Plus className="h-5 w-5" />{" "}
+                  </button>
+                )}
               </div>
               <div className="space-y-3">
                 {assignee.map((member) => (

@@ -17,6 +17,7 @@ import UserRoute from "./protectedRoutes/UserRoute.jsx";
 import CurrentUserProvider from "./context/CurrentUserProvider.jsx";
 import Members from "./pages/Members.jsx";
 import DummyDashboard from "./App.jsx";
+import AllProjectsPage from "./pages/AllProjectsPage.jsx";
 
 
 const router = createBrowserRouter([
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
           {
             path: '/members',
             element: <Members />,
+          },
+          {
+            path: '/allprojects',
+            element: <AllProjectsPage />,
           },
         ],
       },
