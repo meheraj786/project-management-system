@@ -38,6 +38,7 @@ const ProjectCreationModal = ({ member, onClose }) => {
     "Development",
     "Design",
     "Marketing",
+    "Testing",
     "Research",
     "Other",
   ];
