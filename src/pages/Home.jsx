@@ -148,6 +148,8 @@ const Home = () => {
     },
   ];
 
+
+
   // const recentProjects = [
   //   {
   //     id: 1,
@@ -280,22 +282,7 @@ const Home = () => {
     Critical: "bg-red-100 text-red-600",
   };
 
-  // const getActivityIcon = (type) => {
-  //   switch (type) {
-  //     case 'completed':
-  //       return <CheckCircle className="h-4 w-4 text-green-500" />;
-  //     case 'comment':
-  //       return <MessageCircle className="h-4 w-4 text-blue-500" />;
-  //     case 'upload':
-  //       return <FolderOpen className="h-4 w-4 text-primary" />;
-  //     case 'created':
-  //       return <Plus className="h-4 w-4 text-orange-500" />;
-  //     case 'updated':
-  //       return <Activity className="h-4 w-4 text-indigo-500" />;
-  //     default:
-  //       return <Activity className="h-4 w-4 text-gray-500" />;
-  //   }
-  // };
+
 
   return (
     <div className="min-h-screen font-primary bg-gray-50 p-6">
@@ -627,40 +614,7 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        {/* <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-800">Recent Activity</h2>
-              <button className="text-primary hover:text-purple-700 flex items-center space-x-1">
-                <span className="text-sm">View All</span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          
-          <div className="p-6">
-            <div className="space-y-4">
-              {recentActivities.map(activity => (
-                <div key={activity.id} className="flex items-start space-x-3">
-                  <div className={`w-8 h-8 ${activity.avatar} rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0`}>
-                    {activity.initial}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-700">
-                      <span className="font-medium">{activity.user}</span> {activity.action}{' '}
-                      <span className="font-medium text-primary">{activity.target}</span>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    {getActivityIcon(activity.type)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div> */}
+
 
         {/* Quick Actions */}
         {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

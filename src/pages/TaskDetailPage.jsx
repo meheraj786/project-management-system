@@ -50,7 +50,6 @@ const TaskDetailPage = () => {
     4: true,
   });
   const [activeAssigneeModal, setActiveAssigneeModal] = useState(false);
-
   const [projectMembers, setProjectMembers] = useState([]);
   const [assignee, setAssignee] = useState([]);
   const [listForAssignee, setListForAssignee] = useState([]);
@@ -111,6 +110,17 @@ const TaskDetailPage = () => {
       priority: formData.priority,
       dueDate: formData.dueDate,
     }).then(() => {
+      set(push(ref(db, "activity/")), {
+          userid: user?.uid,
+          userName: user?.displayName,
+          userImage: user?.photoURL,
+          acitvityIn: "task",
+          projectId: taskDetail?.projectId,
+          action: "Updated",
+          content: `updated a Task.`,
+          time: moment().format(),
+          type: "updated",
+        });
       toast.success("Updated");
       setIsOpen(false);
     });
@@ -222,8 +232,20 @@ const TaskDetailPage = () => {
           adminId: taskDetail?.adminId,
           createdAt: moment().format(),
         });
+        await set(push(ref(db, "activity/")), {
+          userid: user?.uid,
+          userName: user?.displayName,
+          userImage: user?.photoURL,
+          acitvityIn: "task",
+          projectId: taskDetail?.projectId,
+          taskId: taskDetail?.id,
+          action: "Comment",
+          content: `comment on a task.`,
+          time: moment().format(),
+          type: "comment",
+        });
 
-        toast.success("Subtask added successfully!");
+        toast.success("Comment added successfully!");
         setNewComment("");
         setAddSubTaskMode(false);
       } catch (error) {
@@ -280,6 +302,17 @@ const TaskDetailPage = () => {
         whoAddImage: user?.photoURL,
         whoAddName: user?.displayName,
       }).then(() => {
+        set(push(ref(db, "activity/")), {
+          userid: user?.uid,
+          userName: user?.displayName,
+          userImage: user?.photoURL,
+          acitvityIn: "task",
+          projectId: taskDetail?.projectId,
+          action: "upload",
+          content: `Add an Attachment.`,
+          time: moment().format(),
+          type: "upload",
+        });
         toast.success("Image Added");
         setImage("");
       });

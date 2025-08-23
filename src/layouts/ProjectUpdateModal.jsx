@@ -1,9 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { getDatabase, ref, update } from "firebase/database";
+import { getDatabase, push, ref, set, update } from "firebase/database";
 import toast from "react-hot-toast";
-import { X, Calendar, DollarSign, User, Building2, Tag, FileText, Target, AlertCircle } from 'lucide-react';
+import {
+  X,
+  Calendar,
+  DollarSign,
+  User,
+  Building2,
+  Tag,
+  FileText,
+  Target,
+  AlertCircle,
+} from "lucide-react";
+import { useSelector } from "react-redux";
+import moment from "moment";
 
 const ProjectUpdateModal = ({ projectData, onClose }) => {
+  const user = useSelector((state) => state.userInfo.value);
   const [formData, setFormData] = useState({
     title: "",
     status: "",
@@ -13,7 +26,7 @@ const ProjectUpdateModal = ({ projectData, onClose }) => {
     budget: "",
     client: "",
     category: "",
-    description: ""
+    description: "",
   });
 
   const db = getDatabase();
@@ -30,7 +43,7 @@ const ProjectUpdateModal = ({ projectData, onClose }) => {
         budget: projectData.budget || "",
         client: projectData.client || "",
         category: projectData.category || "",
-        description: projectData.description || ""
+        description: projectData.description || "",
       });
     }
   }, [projectData]);
@@ -54,7 +67,18 @@ const ProjectUpdateModal = ({ projectData, onClose }) => {
       description: formData.description,
     })
       .then(() => {
-        toast.success("✅ Project Updated Successfully!");
+        toast.success("Project Updated Successfully!");
+        set(push(ref(db, "activity/")), {
+          userid: user?.uid,
+          userName: user?.displayName,
+          userImage: user?.photoURL,
+          acitvityIn: "project",
+          projectId: projectData?.id,
+          action: "Update",
+          content: `update project status.`,
+          time: moment().format(),
+          type: "updated",
+        });
         onClose();
       })
       .catch((err) => toast.error(err.message));
@@ -70,8 +94,12 @@ const ProjectUpdateModal = ({ projectData, onClose }) => {
               <FileText className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Update Project</h2>
-              <p className="text-sm text-gray-500">Modify project details and settings</p>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Update Project
+              </h2>
+              <p className="text-sm text-gray-500">
+                Modify project details and settings
+              </p>
             </div>
           </div>
           <button
@@ -137,6 +165,7 @@ const ProjectUpdateModal = ({ projectData, onClose }) => {
                 <option value="Low">🟢 Low</option>
                 <option value="Medium">🟡 Medium</option>
                 <option value="High">🔴 High</option>
+                <option value="High">🔴 Critical</option>
               </select>
             </div>
 

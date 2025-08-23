@@ -20,6 +20,10 @@ import {
   Users,
   X,
   Check,
+  ArrowRight,
+  CheckCircle,
+  FolderOpen,
+  Activity,
 } from "lucide-react";
 import { AddTaskModal } from "../layouts/AddTaskModal";
 import { Link, useParams } from "react-router";
@@ -35,6 +39,7 @@ import ProjectUpdateModal from "../layouts/ProjectUpdateModal";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { UserContext } from "../context/UserContext";
+import moment from "moment";
 
 const ProjectProfile = () => {
   const [addTaskPop, setAddTaskPop] = useState(false);
@@ -53,7 +58,21 @@ const ProjectProfile = () => {
   const [membersId, setMembersId] = useState([]);
   const [taskImageList, setTaskImageList] = useState([]);
   const [ownTaskId, setOwnTaskId] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
 
+  useEffect(() => {
+    const starCountRef = ref(db, "activity/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const activity = item.val();
+        if (activity.projectId == id) {
+          arr.unshift({ ...activity, id: item.key });
+        }
+        setRecentActivities(arr);
+      });
+    });
+  }, [db, id]);
   useEffect(() => {
     const starCountRef = ref(db, "projects/");
     onValue(starCountRef, (snapshot) => {
@@ -159,6 +178,33 @@ const ProjectProfile = () => {
       setTaskImageList(arr);
     });
   }, [db, id, projectData]);
+
+  // const recentActivities = [
+  //   {
+  //     initial: "A",
+  //     user: "Someone",
+  //     action: "Like",
+  //     target: "Proj",
+  //     time: "12;20",
+  //     type: "upload",
+  //   },
+  //   {
+  //     initial: "A",
+  //     user: "Someone",
+  //     action: "Like",
+  //     target: "Proj",
+  //     time: "12;20",
+  //     type: "completed",
+  //   },
+  //   {
+  //     initial: "A",
+  //     user: "Someone",
+  //     action: "Like",
+  //     target: "Proj",
+  //     time: "12;20",
+  //     type: "created",
+  //   },
+  // ];
 
   const renderAvatar = (member) => (
     <div
@@ -282,6 +328,22 @@ const ProjectProfile = () => {
       toast.success("Member Removed");
       remove(ref(db, "assignee/" + assigneeRemoveId.id));
     });
+  };
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case "completed":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "comment":
+        return <MessageCircle className="h-4 w-4 text-blue-500" />;
+      case "upload":
+        return <FolderOpen className="h-4 w-4 text-primary" />;
+      case "created":
+        return <Plus className="h-4 w-4 text-orange-500" />;
+      case "updated":
+        return <Activity className="h-4 w-4 text-indigo-500" />;
+      default:
+        return <Activity className="h-4 w-4 text-gray-500" />;
+    }
   };
   return (
     <div className="max-w-7xl mt-10 mx-auto">
@@ -714,6 +776,52 @@ const ProjectProfile = () => {
             {tasks
               .filter((t) => t.status == "Completed")
               .map((task) => renderTask(task))}
+          </div>
+        </div>
+      </div>
+      {/* Recent Activity */}
+      <div className="bg-white my-5 rounded-xl shadow-sm border border-gray-100">
+        <div className="p-6 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Recent Activity
+            </h2>
+            <button className="text-primary hover:text-purple-700 flex items-center space-x-1">
+              <span className="text-sm">View All</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="space-y-4">
+            {recentActivities.map((activity) => (
+              <div key={activity.id} className="flex items-start space-x-3">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0`}
+                >
+                  <img
+                    src={activity.userImage}
+                    className="rounded-full"
+                    alt=""
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-700">
+                    <span className="font-medium">{activity.userName} </span>
+                    <span className="font-medium text-primary">
+                      {activity.content}
+                    </span>
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {moment(activity.time).fromNow()}
+                  </p>
+                </div>
+                <div className="flex-shrink-0">
+                  {getActivityIcon(activity.type)}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
