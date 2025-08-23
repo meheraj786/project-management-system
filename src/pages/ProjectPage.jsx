@@ -691,6 +691,7 @@ const ProjectProfile = () => {
               </span>
             </button>
           )}
+<Link to={`/messages/${projectData?.id}`}>
 
           <button className="flex items-center space-x-2 px-4 py-2 border border-primary group hover:bg-primary hover:text-white rounded-lg bg-white transition-colors">
             <MessageCircleDashed className="h-4 w-4 group-hover:text-gray-200 text-gray-500" />
@@ -698,6 +699,7 @@ const ProjectProfile = () => {
               Message
             </span>
           </button>
+</Link>
         </div>
 
         <div className="flex items-center space-x-3">

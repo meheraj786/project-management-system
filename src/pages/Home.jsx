@@ -27,6 +27,7 @@ import { UserContext } from "../context/UserContext";
 import { getDatabase, onValue, ref } from "firebase/database";
 import Flex from "../layouts/Flex";
 import { Link } from "react-router";
+import ProjectStatusChart from "../components/projectStatusChart/ProjectStatusChart";
 
 const Home = () => {
   const user = useSelector((state) => state.userInfo.value);
@@ -353,6 +354,7 @@ const Home = () => {
             </div>
           )}
         </div>
+        <ProjectStatusChart projects={projects} tasks={tasks}/>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -13,14 +13,15 @@ import {
 import Conversation from "../layouts/Conversation";
 import { getDatabase, onValue, ref } from "firebase/database";
 import { useSelector } from "react-redux";
+import { Link, Outlet } from "react-router";
 
 const Messages = () => {
   const [selectedProject, setSelectedProject] = useState(1);
-  
+
   const user = useSelector((state) => state.userInfo.value);
   const [projects, setProjects] = useState([]);
   const [ownProjectsId, setOwnProjectsId] = useState([]);
-  const db= getDatabase()
+  const db = getDatabase();
 
   // Sample projects data
   // const [projects] = useState([
@@ -103,7 +104,7 @@ const Messages = () => {
   // Sample messages data
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-[91vh] bg-gray-50">
       {/* Projects Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         {/* Sidebar Header */}
@@ -124,70 +125,69 @@ const Messages = () => {
         {/* Projects List */}
         <div className="flex-1 overflow-y-auto">
           {projects.map((project) => (
-            <div
-              key={project.id}
-              onClick={() => setSelectedProject(project.id)}
-              className={`p-4 cursor-pointer border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                selectedProject === project.id
-                  ? "bg-blue-50 border-r-4 border-r-blue-600"
-                  : ""
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <img
-                    src={project.adminImage}
-                    alt={project.title}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                  />
-                  {project.isOnline && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3
-                      className={`font-semibold text-sm truncate ${
-                        selectedProject === project.id
-                          ? "text-blue-700"
-                          : "text-gray-900"
-                      }`}
-                    >
-                      {project.title}
-                    </h3>
-                    <span className="text-xs text-gray-500">
-                      {project.lastMessageTime}
-                    </span>
+            <Link to={`/messages/${project.id}`}>
+              <div
+                key={project.id}
+                onClick={() => setSelectedProject(project.id)}
+                className={`p-4 cursor-pointer border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                  selectedProject === project.id
+                    ? "bg-blue-50 border-r-4 border-r-blue-600"
+                    : ""
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    {project?.avatar ? (
+                      <img
+                        src={project?.avatar}
+                        alt={project?.title}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 bg-primary text-white h-10 rounded-full flex justify-center items-center">
+                        {project?.title?.charAt(0)?.toUpperCase()}
+                      </div>
+                    )}
+                    {project.isOnline && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                    )}
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-600 truncate">
-                      {project.lastMessage}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-3 h-3 text-gray-400" />
-                        <span className="text-xs text-gray-500">
-                          {project.members}
-                        </span>
-                      </div>
-                      {project.unreadCount > 0 && (
-                        <div className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
-                          {project.unreadCount}
-                        </div>
-                      )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3
+                        className={`font-semibold text-sm truncate ${
+                          selectedProject === project.id
+                            ? "text-blue-700"
+                            : "text-gray-900"
+                        }`}
+                      >
+                        {project.title}
+                      </h3>
+                      <span className="text-xs text-gray-500">
+                        {project.lastMessageTime}
+                      </span>
+                      <span
+                        className={`text-xs font-medium px-2 py-1 rounded-full
+    ${project.status === "Todo" && "bg-gray-100 text-gray-600"}
+    ${project.status === "In Progress" && "bg-blue-100 text-blue-600"}
+    ${project.status === "Done" && "bg-green-100 text-green-600"}
+    ${project.status === "onHold" && "bg-yellow-100 text-yellow-700"}
+  `}
+                      >
+                        {project.status}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
 
       {/* Chat Area */}
-      <Conversation projects={projects} selectedProject={selectedProject} />
+      <Outlet />
     </div>
   );
 };
