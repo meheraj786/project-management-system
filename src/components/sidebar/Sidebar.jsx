@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link, NavLink } from "react-router";
 import {
   Home,
@@ -15,24 +15,54 @@ import {
 } from "lucide-react";
 import { getDatabase, onValue, ref } from "firebase/database";
 import { useSelector } from "react-redux";
+import { UserContext } from "../../context/UserContext";
 
 const Sidebar = () => {
   const user = useSelector((state) => state.userInfo.value);
   const db = getDatabase();
+  const { currentUser } = useContext(UserContext);
   const [projects, setProjects] = useState([]);
+  const [ownProjectsId, setOwnProjectsId]= useState([])
   useEffect(() => {
-    const starCountRef = ref(db, "projects/");
-    onValue(starCountRef, (snapshot) => {
-      let arr = [];
-      snapshot.forEach((item) => {
-        const projects = item.val();
-        if (projects.adminId == user?.uid) {
-          arr.unshift({ ...projects, id: item.key });
-        }
+      const starCountRef = ref(db, "projects/");
+      onValue(starCountRef, (snapshot) => {
+        let arr = [];
+        snapshot.forEach((item) => {
+          const projects = item.val();
+          const projectId= item.key
+          if (projects.adminId == user?.uid || ownProjectsId.includes(projectId)) {
+            arr.unshift({ ...projects, id: item.key });
+          }
+        });
+        setProjects(arr);
       });
-      setProjects(arr);
-    });
-  }, [db]);
+    }, [db, ownProjectsId]);
+      useEffect(() => {
+        const starCountRef = ref(db, "members/");
+        onValue(starCountRef, (snapshot) => {
+          let arr = [];
+          snapshot.forEach((item) => {
+            const projects = item.val();
+            if (projects.memberId == user?.uid) {
+              arr.unshift(projects.projectId);
+            }
+            setOwnProjectsId(arr)
+          });
+        });
+      }, [db]);
+  // useEffect(() => {
+  //   const starCountRef = ref(db, "projects/");
+  //   onValue(starCountRef, (snapshot) => {
+  //     let arr = [];
+  //     snapshot.forEach((item) => {
+  //       const projects = item.val();
+  //       if (projects.adminId == user?.uid) {
+  //         arr.unshift({ ...projects, id: item.key });
+  //       }
+  //     });
+  //     setProjects(arr);
+  //   });
+  // }, [db]);
   const menuItems = [
     { name: "Home", icon: Home, path: "/", count: null },
     { name: "Messages", icon: MessageCircle, path: "/messages", count: null },
@@ -69,9 +99,75 @@ const Sidebar = () => {
       {/* Navigation Menu */}
       <div className="flex-1 px-4 py-6">
         <nav className="space-y-1">
-          {menuItems.map((item) => {
+          {currentUser.accountType === "member"
+            ? menuItems
+                .filter((m) => m.name !== "Members")
+                .map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <NavLink
+                      key={item.name}
+                      to={item.path}
+                      className={({ isActive }) =>
+                        `w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                          isActive
+                            ? "bg-primary/8 text-black border border-blue-200"
+                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        }`
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <IconComponent
+                            className={`mr-3 h-5 w-5 ${
+                              isActive ? "text-primary" : "text-gray-400"
+                            }`}
+                          />
+                          {item.name}
+                          {item.count && (
+                            <span className="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">
+                              {item.count}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </NavLink>
+                  );
+                })
+            : menuItems.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <NavLink
+                    key={item.name}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                        isActive
+                          ? "bg-primary/8 text-black border border-blue-200"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <IconComponent
+                          className={`mr-3 h-5 w-5 ${
+                            isActive ? "text-primary" : "text-gray-400"
+                          }`}
+                        />
+                        {item.name}
+                        {item.count && (
+                          <span className="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">
+                            {item.count}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                );
+              })}
+          {/* {menuItems.map((item) => {
             const IconComponent = item.icon;
-
             return (
               <NavLink
                 key={item.name}
@@ -101,20 +197,20 @@ const Sidebar = () => {
                 )}
               </NavLink>
             );
-          })}
+          })} */}
         </nav>
 
         {/* My Projects Section */}
         <div className="mt-8">
           <Link to={`/allprojects`}>
-          <div className="flex items-center group justify-between px-3 mb-4">
-            <h3 className="text-xs font-semibold text-primary uppercase tracking-wide">
-              MY PROJECTS
-            </h3>
-            <button className="text-primary group-hover:translate-x-2 transition-all duration-200 hover:text-gray-600">
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
+            <div className="flex items-center group justify-between px-3 mb-4">
+              <h3 className="text-xs font-semibold text-primary uppercase tracking-wide">
+                MY PROJECTS
+              </h3>
+              <button className="text-primary group-hover:translate-x-2 transition-all duration-200 hover:text-gray-600">
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
           </Link>
 
           <div className="space-y-2">
@@ -128,30 +224,30 @@ const Sidebar = () => {
 
               return (
                 <Link to={`/project/${project.id}`}>
-                <div
-                  key={index}
-                  className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors cursor-pointer ${
-                    project.priorityColor ? "bg-gray-50" : "hover:bg-gray-50"
-                  } group`}
-                >
-                  <div className="flex items-center">
-                    <div
-                      className={`w-2 h-2 rounded-full mr-3 ${priorityColor}`}
-                    ></div>
-                    <span
-                      className={`text-sm ${
-                        project.active
-                          ? "text-gray-900 font-medium"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      {project.title}
-                    </span>
+                  <div
+                    key={index}
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors cursor-pointer ${
+                      project.priorityColor ? "bg-gray-50" : "hover:bg-gray-50"
+                    } group`}
+                  >
+                    <div className="flex items-center">
+                      <div
+                        className={`w-2 h-2 rounded-full mr-3 ${priorityColor}`}
+                      ></div>
+                      <span
+                        className={`text-sm ${
+                          project.active
+                            ? "text-gray-900 font-medium"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        {project.title}
+                      </span>
+                    </div>
+                    <button className="text-gray-400 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
                   </div>
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
-                </div>
                 </Link>
               );
             })}

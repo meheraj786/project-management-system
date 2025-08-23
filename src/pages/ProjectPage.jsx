@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Filter,
   Calendar,
@@ -34,10 +34,12 @@ import {
 import ProjectUpdateModal from "../layouts/ProjectUpdateModal";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import { UserContext } from "../context/UserContext";
 
 const ProjectProfile = () => {
   const [addTaskPop, setAddTaskPop] = useState(false);
   const [projectData, setProjectData] = useState(null);
+  const { currentUser } = useContext(UserContext);
   const [tasks, setTasks] = useState([]);
   const [members, setMembers] = useState([]);
   const db = getDatabase();
@@ -50,6 +52,7 @@ const ProjectProfile = () => {
   const [allMembers, setAllMembers] = useState([]);
   const [membersId, setMembersId] = useState([]);
   const [taskImageList, setTaskImageList] = useState([]);
+  const [ownTaskId, setOwnTaskId] = useState([]);
 
   useEffect(() => {
     const starCountRef = ref(db, "projects/");
@@ -68,13 +71,18 @@ const ProjectProfile = () => {
       let arr = [];
       snapshot.forEach((item) => {
         const task = item.val();
-        if (task.projectId == id) {
+        if (
+          (task.projectId == id && task.adminId == user?.uid) ||
+          (task.projectId == id &&
+            task.adminId !== user?.uid &&
+            ownTaskId.includes(item.key))
+        ) {
           arr.unshift({ ...task, id: item.key });
         }
         setTasks(arr);
       });
     });
-  }, [db, id]);
+  }, [db, id, ownTaskId]);
   useEffect(() => {
     const starCountRef = ref(db, "users/");
     onValue(starCountRef, (snapshot) => {
@@ -102,6 +110,20 @@ const ProjectProfile = () => {
       });
     });
   }, [db, id]);
+  useEffect(() => {
+    const starCountRef = ref(db, "assignee/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const assignee = item.val();
+        const assigneeId = item.key;
+        if (assignee.assigneeId == user?.uid) {
+          arr.unshift(assignee.taskId);
+        }
+        setOwnTaskId(arr);
+      });
+    });
+  }, [db]);
   useEffect(() => {
     const starCountRef = ref(db, "assignee/");
     onValue(starCountRef, (snapshot) => {
@@ -193,7 +215,11 @@ const ProjectProfile = () => {
           <div
             className={`w-full h-32 rounded-lg mb-4 flex items-center justify-center`}
           >
-              <img src={taskImageList.filter((i) => i.taskId == task.id)[0].image} className="w-full h-full rounded-lg object-cover object-cover" alt="" />
+            <img
+              src={taskImageList.filter((i) => i.taskId == task.id)[0].image}
+              className="w-full h-full rounded-lg object-cover "
+              alt=""
+            />
           </div>
         )}
 
@@ -227,10 +253,12 @@ const ProjectProfile = () => {
                 {comments.filter((c) => c.taskId == task.id).length} comments
               </span>
             </div>
-              <div className="flex items-center space-x-1">
-                <Paperclip className="h-4 w-4" />
-                <span className="text-xs">{taskImageList.filter((i) => i.taskId == task.id).length} files</span>
-              </div>
+            <div className="flex items-center space-x-1">
+              <Paperclip className="h-4 w-4" />
+              <span className="text-xs">
+                {taskImageList.filter((i) => i.taskId == task.id).length} files
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -399,11 +427,13 @@ const ProjectProfile = () => {
           {/* Members Section */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <button onClick={() => setMembersPop(true)}>
-                <span className="text-primary text-sm font-medium">
-                  Manage Members
-                </span>
-              </button>
+              {currentUser.accountType == "admin" && (
+                <button onClick={() => setMembersPop(true)}>
+                  <span className="text-primary text-sm font-medium">
+                    Manage Members
+                  </span>
+                </button>
+              )}
 
               <div className="flex items-center">
                 {members.slice(0, 4).map((member, index) => (
@@ -572,15 +602,17 @@ const ProjectProfile = () => {
       {/* Filters and Actions */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <button
-            onClick={() => setUpdateProjectModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 border border-primary group hover:bg-primary hover:text-white rounded-lg bg-white  transition-colors"
-          >
-            <ChartBarBig className="h-4 w-4 group-hover:text-gray-200 text-gray-500" />
-            <span className="text-sm group-hover:text-white text-gray-700">
-              Change Status
-            </span>
-          </button>
+          {currentUser.accountType == "admin" && (
+            <button
+              onClick={() => setUpdateProjectModal(true)}
+              className="flex items-center space-x-2 px-4 py-2 border border-primary group hover:bg-primary hover:text-white rounded-lg bg-white  transition-colors"
+            >
+              <ChartBarBig className="h-4 w-4 group-hover:text-gray-200 text-gray-500" />
+              <span className="text-sm group-hover:text-white text-gray-700">
+                Change Status
+              </span>
+            </button>
+          )}
 
           <button className="flex items-center space-x-2 px-4 py-2 border border-primary group hover:bg-primary hover:text-white rounded-lg bg-white transition-colors">
             <MessageCircleDashed className="h-4 w-4 group-hover:text-gray-200 text-gray-500" />
@@ -591,20 +623,24 @@ const ProjectProfile = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          {projectData?.status == "Done" ? (
-            <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg  transition-colors">
-              <span className="text-sm text-primary/70">
-                Project Completed, Can't Add More Task
-              </span>
-            </button>
-          ) : (
-            <button
-              onClick={() => setAddTaskPop(true)}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg bg-primary hover:bg-primary/70 transition-colors"
-            >
-              <Plus className="h-4 w-4 text-white" />
-              <span className="text-sm text-white">Add Task</span>
-            </button>
+          {currentUser.accountType == "admin" && (
+            <>
+              {projectData?.status == "Done" ? (
+                <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg  transition-colors">
+                  <span className="text-sm text-primary/70">
+                    Project Completed, Can't Add More Task
+                  </span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setAddTaskPop(true)}
+                  className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg bg-primary hover:bg-primary/70 transition-colors"
+                >
+                  <Plus className="h-4 w-4 text-white" />
+                  <span className="text-sm text-white">Add Task</span>
+                </button>
+              )}
+            </>
           )}
 
           <button className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center hover:bg-purple-700 transition-colors">

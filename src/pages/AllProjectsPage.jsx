@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Plus,
   Search,
@@ -18,6 +18,8 @@ import {
 import { getDatabase, onValue, ref } from "firebase/database";
 import { useSelector } from "react-redux";
 import { Link } from "react-router";
+import ProjectCreationModal from "../layouts/ProjectCreationModal";
+import { UserContext } from "../context/UserContext";
 
 const AllProjectsPage = () => {
   const [projects, setProjects] = useState([]);
@@ -25,23 +27,57 @@ const AllProjectsPage = () => {
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedPriority, setSelectedPriority] = useState("All");
   const user = useSelector((state) => state.userInfo.value);
-  const db= getDatabase()
+  const db = getDatabase();
+  const { currentUser } = useContext(UserContext);
+  const [ownProjectsId, setOwnProjectsId] = useState([]);
+  const [projectCreationPop, setProjectCreationPop] = useState(false);
+  const [member, setMember] = useState([]);
 
   // Sample data - replace with your actual data
 
-    useEffect(() => {
+  useEffect(() => {
     const starCountRef = ref(db, "projects/");
     onValue(starCountRef, (snapshot) => {
       let arr = [];
       snapshot.forEach((item) => {
         const projects = item.val();
-        if (projects.adminId == user?.uid) {
+        const projectId = item.key;
+        if (
+          projects.adminId == user?.uid ||
+          ownProjectsId.includes(projectId)
+        ) {
           arr.unshift({ ...projects, id: item.key });
         }
       });
       setProjects(arr);
     });
+  }, [db, ownProjectsId]);
+  useEffect(() => {
+    const starCountRef = ref(db, "members/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const projects = item.val();
+        if (projects.memberId == user?.uid) {
+          arr.unshift(projects.projectId);
+        }
+        setOwnProjectsId(arr);
+      });
+    });
   }, [db]);
+  useEffect(() => {
+    const starCountRef = ref(db, "users/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const members = item.val();
+        if (members.adminId == user?.uid) {
+          arr.push({ ...members, id: item.key });
+        }
+      });
+      setMember(arr);
+    });
+  }, []);
 
   // Filter projects
   const filteredProjects = projects.filter((project) => {
@@ -108,67 +144,65 @@ const AllProjectsPage = () => {
   // Project Card Component
   const ProjectCard = ({ project }) => (
     <Link to={`/project/${project.id}`}>
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            {project.title}
-          </h3>
-          <p className="text-sm text-gray-600 line-clamp-2">
-            {project.description}
-          </p>
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {project.title}
+            </h3>
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {project.description}
+            </p>
+          </div>
+          <div className="relative"></div>
         </div>
-        <div className="relative">
-        </div>
-      </div>
 
-      <div className="space-y-3 mb-4">
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-gray-400" />
-            <span className="text-gray-600">
-              Due: {formatDate(project.endDate)}
+        <div className="space-y-3 mb-4">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-600">
+                Due: {formatDate(project.endDate)}
+              </span>
+            </div>
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(
+                project.priority
+              )}`}
+            >
+              {project.priority}
             </span>
           </div>
+
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center space-x-2">
+              <Building2 className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-600">{project.client}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <DollarSign className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-600">
+                ${Number(project.budget).toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 text-sm">
+            <Target className="h-4 w-4 text-gray-400" />
+            <span className="text-gray-600">{project.category}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(
-              project.priority
+            className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+              project.status
             )}`}
           >
-            {project.priority}
+            {project.status}
           </span>
         </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-2">
-            <Building2 className="h-4 w-4 text-gray-400" />
-            <span className="text-gray-600">{project.client}</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <DollarSign className="h-4 w-4 text-gray-400" />
-            <span className="text-gray-600">
-              ${Number(project.budget).toLocaleString()}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2 text-sm">
-          <Target className="h-4 w-4 text-gray-400" />
-          <span className="text-gray-600">{project.category}</span>
-        </div>
       </div>
-
-      <div className="flex items-center justify-between">
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-            project.status
-          )}`}
-        >
-          {project.status}
-        </span>
-      </div>
-    </div>
-    
     </Link>
   );
 
@@ -204,6 +238,12 @@ const AllProjectsPage = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
+        {projectCreationPop && (
+          <ProjectCreationModal
+            member={member}
+            onClose={() => setProjectCreationPop(false)}
+          />
+        )}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">All Projects</h1>
@@ -211,10 +251,15 @@ const AllProjectsPage = () => {
               Manage and track all your projects
             </p>
           </div>
-          <button className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
-            <Plus className="h-5 w-5" />
-            <span>New Project</span>
-          </button>
+          {currentUser.accountType == "admin" && (
+            <button
+              onClick={() => setProjectCreationPop(true)}
+              className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="h-5 w-5" />
+              <span>New Project</span>
+            </button>
+          )}
         </div>
 
         {/* Filters */}

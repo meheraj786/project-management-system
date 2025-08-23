@@ -35,19 +35,21 @@ const Home = () => {
   const [member, setMember] = useState([]);
   const [projectMembers, setProjectMembers] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [ownProjectsId, setOwnProjectsId] = useState([]);
+  const [ownTaskId, setOwnTaskId]= useState([])
   useEffect(() => {
     const starCountRef = ref(db, "tasks/");
     onValue(starCountRef, (snapshot) => {
       let arr = [];
       snapshot.forEach((item) => {
         const task = item.val();
-        if (task.adminId == user?.uid) {
+        if (task.adminId == user?.uid || ownTaskId.includes(item.key)) {
           arr.unshift({ ...task, id: item.key });
         }
         setTasks(arr);
       });
     });
-  }, [db]);
+  }, [db, ownTaskId]);
   useEffect(() => {
     const starCountRef = ref(db, "members/");
     onValue(starCountRef, (snapshot) => {
@@ -65,13 +67,17 @@ const Home = () => {
       let arr = [];
       snapshot.forEach((item) => {
         const projects = item.val();
-        if (projects.adminId == user?.uid) {
+        const projectId = item.key;
+        if (
+          projects.adminId == user?.uid ||
+          ownProjectsId.includes(projectId)
+        ) {
           arr.unshift({ ...projects, id: item.key });
         }
       });
       setProjects(arr);
     });
-  }, [db]);
+  }, [db, ownProjectsId]);
   useEffect(() => {
     const starCountRef = ref(db, "users/");
     onValue(starCountRef, (snapshot) => {
@@ -85,6 +91,33 @@ const Home = () => {
       setMember(arr);
     });
   }, []);
+  useEffect(() => {
+    const starCountRef = ref(db, "assignee/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const assignee = item.val();
+        const assigneeId=item.key
+        if (assignee.assigneeId == user?.uid) {
+          arr.unshift(assignee.taskId);
+        }
+        setOwnTaskId(arr);
+      });
+    });
+  }, [db]);
+  useEffect(() => {
+    const starCountRef = ref(db, "members/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const projects = item.val();
+        if (projects.memberId == user?.uid) {
+          arr.unshift(projects.projectId);
+        }
+        setOwnProjectsId(arr);
+      });
+    });
+  }, [db]);
 
   const { currentUser } = useContext(UserContext);
   const [projectModal, setProjectModal] = useState(false);
@@ -316,20 +349,22 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 mt-6 md:mt-0">
-            <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200">
-              <Calendar className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-700 font-medium">Today</span>
-            </button>
+          {currentUser.accountType == "admin" && (
+            <div className="flex items-center space-x-3 mt-6 md:mt-0">
+              <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200">
+                <Calendar className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-700 font-medium">Today</span>
+              </button>
 
-            <button
-              onClick={() => setProjectModal(true)}
-              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-md"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="font-medium">New Project</span>
-            </button>
-          </div>
+              <button
+                onClick={() => setProjectModal(true)}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-md"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="font-medium">New Project</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -410,10 +445,10 @@ const Home = () => {
                     Recent Projects
                   </h2>
                   <Link to={`/allprojects`}>
-                  <button className="text-primary hover:text-purple-700 flex items-center space-x-1">
-                    <span className="text-sm">View All</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                    <button className="text-primary hover:text-purple-700 flex items-center space-x-1">
+                      <span className="text-sm">View All</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
                   </Link>
                 </div>
               </div>

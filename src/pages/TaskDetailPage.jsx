@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   ArrowLeft,
   Star,
@@ -34,6 +34,7 @@ import AddAssigneeModal from "../layouts/AddAssigneeModal";
 import SubtasksComponent from "../components/subTaskComponent/SubTaskComponent";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import { UserContext } from "../context/UserContext";
 
 const TaskDetailPage = () => {
   const [taskDetail, setTaskDetail] = useState(null);
@@ -54,7 +55,7 @@ const TaskDetailPage = () => {
   const [assignee, setAssignee] = useState([]);
   const [listForAssignee, setListForAssignee] = useState([]);
   const [addSubTaskMode, setAddSubTaskMode] = useState(false);
-
+  const { currentUser } = useContext(UserContext);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState(null);
@@ -94,7 +95,7 @@ const TaskDetailPage = () => {
       });
     }
   }, [taskDetail]);
-  // handle change
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -322,37 +323,41 @@ const TaskDetailPage = () => {
                 </select>
               </div>
 
-              {/* Priority */}
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Priority
-                </label>
-                <select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-2 border rounded-lg"
-                >
-                  <option>Low</option>
-                  <option>Medium</option>
-                  <option>High</option>
-                  <option>Critical</option>
-                </select>
-              </div>
+              {currentUser.accountType == "admin" && (
+                <>
+                  {/* Priority */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">
+                      Priority
+                    </label>
+                    <select
+                      name="priority"
+                      value={formData.priority}
+                      onChange={handleChange}
+                      className="w-full mt-1 p-2 border rounded-lg"
+                    >
+                      <option>Low</option>
+                      <option>Medium</option>
+                      <option>High</option>
+                      <option>Critical</option>
+                    </select>
+                  </div>
 
-              {/* Due Date */}
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Due Date
-                </label>
-                <input
-                  type="date"
-                  name="dueDate"
-                  value={formData.dueDate}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-2 border rounded-lg"
-                />
-              </div>
+                  {/* Due Date */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">
+                      Due Date
+                    </label>
+                    <input
+                      type="date"
+                      name="dueDate"
+                      value={formData.dueDate}
+                      onChange={handleChange}
+                      className="w-full mt-1 p-2 border rounded-lg"
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Buttons */}
               <div className="flex justify-end gap-2">
@@ -473,21 +478,40 @@ const TaskDetailPage = () => {
                     <Upload className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <label
-                      htmlFor="image"
-                      className="text-sm font-semibold text-gray-800 cursor-pointer hover:text-blue-700 transition-colors duration-200 block"
-                    >
-                      Attach Images
-                    </label>
+                    {taskDetail?.status == "Completed" ? (
+                      <label
+                        htmlFor="image"
+                        className="text-sm font-semibold text-gray-800 cursor-pointer  block"
+                      >
+                        Task is Completed, you can't add more Attachment
+                      </label>
+                    ) : (
+                      <label
+                        htmlFor="image"
+                        className="text-sm font-semibold text-gray-800 cursor-pointer hover:text-blue-700 transition-colors duration-200 block"
+                      >
+                        Attach Images
+                      </label>
+                    )}
                   </div>
                 </div>
+                {taskDetail?.status == "Completed" ? (
+                  <input
+                    id="image"
+                    onChange={handleImageChange}
+                    type="file"
+                    className="hidden"
+                    disabled
+                  />
+                ) : (
+                  <input
+                    id="image"
+                    onChange={handleImageChange}
+                    type="file"
+                    className="hidden"
+                  />
+                )}
 
-                <input
-                  id="image"
-                  onChange={handleImageChange}
-                  type="file"
-                  className="hidden"
-                />
                 {image && (
                   <div className="relative overflow-hidden rounded-xl ">
                     <img
@@ -500,21 +524,29 @@ const TaskDetailPage = () => {
                 )}
 
                 <div className="flex-1 flex justify-end gap-x-2 items-center">
-                  {
-                    image &&                                       <button
+                  {image && (
+                    <button
                       onClick={() => setImage("")}
                       className="  p-2 bg-white border-2 border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
-                  }
-
-                  <button
-                    onClick={addImage}
-                    className="px-5  py-2 bg-gradient-to-r from-primary to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  >
-                    Attach
-                  </button>
+                  )}
+                  {taskDetail?.status == "Completed" ? (
+                    <button
+                      className="px-5  py-2 bg-gradient-to-r from-primary/50 to-blue-700/50 hover:from-blue-700/50 hover:to-blue-800/50 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg "
+                      disabled
+                    >
+                      Attach
+                    </button>
+                  ) : (
+                    <button
+                      onClick={addImage}
+                      className="px-5  py-2 bg-gradient-to-r from-primary to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    >
+                      Attach
+                    </button>
+                  )}
                 </div>
 
                 {/* Subtle background pattern */}
@@ -547,6 +579,11 @@ const TaskDetailPage = () => {
                               src={img.image}
                               alt={`Attachment ${index + 1}`}
                               className="w-full h-18 object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                            <img
+                              src={img.whoAddImage}
+                              className="w-5 h-5 rounded-full absolute bottom-2 left-2 bg-white shadow "
+                              alt=""
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                           </div>
@@ -622,7 +659,7 @@ const TaskDetailPage = () => {
                       className={`w-8 h-8 rounded-full  flex items-center justify-center text-white text-xs font-medium`}
                     >
                       <img
-                        src={user?.photoURL}
+                        src={comment?.whoCommentImage}
                         className="w-full h-full object-cover rounded-full"
                         alt=""
                       />
@@ -738,19 +775,23 @@ const TaskDetailPage = () => {
               <div className="flex items-center justify-between mb-4">
                 {" "}
                 <h3 className="font-semibold text-gray-800">Assignees</h3>{" "}
-                {taskDetail?.status == "Completed" ? (
-                  <button className="text-primary/60 text-xs">
-                    {" "}
-                    Task Complete, Can't Assignee More
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setActiveAssigneeModal(true)}
-                    className="text-primary hover:text-primary/70"
-                  >
-                    {" "}
-                    <Plus className="h-5 w-5" />{" "}
-                  </button>
+                {currentUser.accountType == "admin" && (
+                  <>
+                    {taskDetail?.status == "Completed" ? (
+                      <button className="text-primary/60 text-xs">
+                        {" "}
+                        Task Complete, Can't Assignee More
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setActiveAssigneeModal(true)}
+                        className="text-primary hover:text-primary/70"
+                      >
+                        {" "}
+                        <Plus className="h-5 w-5" />{" "}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
               <div className="space-y-3">
@@ -766,12 +807,14 @@ const TaskDetailPage = () => {
                           {member.assigneeRole}
                         </p>
                       </div>
-                      <button
-                        onClick={() => toggleDropdown(member.id)}
-                        className="text-gray-400 hover:text-gray-600"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
+                      {currentUser.accountType == "admin" && (
+                        <button
+                          onClick={() => toggleDropdown(member.id)}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
 
                     {/* Dropdown */}
