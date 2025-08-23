@@ -18,6 +18,7 @@ import CurrentUserProvider from "./context/CurrentUserProvider.jsx";
 import Members from "./pages/Members.jsx";
 import DummyDashboard from "./App.jsx";
 import AllProjectsPage from "./pages/AllProjectsPage.jsx";
+import Messages from "./pages/Messages.jsx";
 
 
 const router = createBrowserRouter([
@@ -43,6 +44,10 @@ const router = createBrowserRouter([
           {
             path: '/allprojects',
             element: <AllProjectsPage />,
+          },
+          {
+            path: '/messages',
+            element: <Messages />,
           },
         ],
       },

@@ -318,15 +318,31 @@ const ProjectProfile = () => {
       memberImage: m.profileImage,
       memberName: m.name,
       memberRole: m.role || "",
-    }).then(() => toast.success("Member Added"));
+    }).then(() => {
+      toast.success("Member Added")
+    set(push(ref(db, "notification/")), {
+              reciverId: m.id,
+              adminId: user?.uid,
+              adminName: user?.displayName,
+              adminImage: user?.photoURL,
+              content: `${user?.displayName} added you in their project`
+            });
+    });
   };
   const removeMemberHandler = (id) => {
     const removeid = members.find((m) => m.memberId == id);
     const assigneeRemoveId = assignee.find((m) => m.assigneeId == id);
 
     remove(ref(db, "members/" + removeid.id)).then(() => {
-      toast.success("Member Removed");
-      remove(ref(db, "assignee/" + assigneeRemoveId.id));
+      toast.success("Member Removed")
+      set(push(ref(db, "notification/")), {
+              reciverId: removeid.memberId,
+              adminId: user?.uid,
+              adminName: user?.displayName,
+              adminImage: user?.photoURL,
+              content: `${user?.displayName} removed you from their project`
+            });
+      remove(ref(db, "assignee/" + assigneeRemoveId.id))
     });
   };
   const getActivityIcon = (type) => {

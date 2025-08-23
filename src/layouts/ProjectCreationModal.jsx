@@ -154,7 +154,16 @@ const handleSubmit = (e) => {
           memberImage: m.profileImage,
           memberName: m.name,
           memberRole: m.role || ""
+        }).then(()=>{
+          set(push(ref(db, "notification/")), {
+          reciverId: memberRef.key,
+          adminId: user?.uid,
+          adminName: user?.displayName,
+          adminImage: user?.photoURL,
+          content: `${user?.displayName} added you in their project`
         });
+        })
+        
       });
       toast.success("Project Created Successfully");
       onClose();

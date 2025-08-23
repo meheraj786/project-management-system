@@ -38,6 +38,7 @@ const AddAssigneeModal = ({ taskDetail, onClose, users }) => {
           toast.success(`${user.memberName} added as assignee`);
         })
         .catch((err) => toast.error(err.message));
+        
     });
 
     setSelectedUsers([]);
