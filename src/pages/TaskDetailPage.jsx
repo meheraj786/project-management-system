@@ -17,7 +17,15 @@ import {
   Trash2,
 } from "lucide-react";
 import { useParams } from "react-router";
-import { getDatabase, onValue, push, ref, set } from "firebase/database";
+import {
+  getDatabase,
+  onValue,
+  push,
+  ref,
+  remove,
+  set,
+  update,
+} from "firebase/database";
 import moment from "moment";
 import AddAssigneeModal from "../layouts/AddAssigneeModal";
 import SubtasksComponent from "../components/subTaskComponent/SubTaskComponent";
@@ -26,7 +34,7 @@ import toast from "react-hot-toast";
 
 const TaskDetailPage = () => {
   const [taskDetail, setTaskDetail] = useState(null);
-  const [comments, setComments]= useState([])
+  const [comments, setComments] = useState([]);
   const { id } = useParams();
   const user = useSelector((state) => state.userInfo.value);
   const db = getDatabase();
@@ -43,6 +51,46 @@ const TaskDetailPage = () => {
   const [assignee, setAssignee] = useState([]);
   const [listForAssignee, setListForAssignee] = useState([]);
   const [addSubTaskMode, setAddSubTaskMode] = useState(false);
+
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [formData, setFormData] = useState(null);
+
+  useEffect(() => {
+    if (taskDetail) {
+      setFormData({
+        id: taskDetail.id,
+        status: taskDetail.status || "",
+        priority: taskDetail.priority || "",
+        dueDate: taskDetail.dueDate || "",
+      });
+    }
+  }, [taskDetail]);
+  // handle change
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // handle submit
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    update(ref(db, "tasks/" + formData.id), {
+      status: formData.status,
+      priority: formData.priority,
+      dueDate: formData.dueDate,
+    }).then(() => {
+      toast.success("Updated");
+      setIsOpen(false);
+    });
+  };
+
+  const toggleDropdown = (id) => {
+    setOpenDropdown(openDropdown === id ? null : id);
+  };
+  console.log(taskDetail, "task");
 
   useEffect(() => {
     const starCountRef = ref(db, "members/");
@@ -100,7 +148,7 @@ const TaskDetailPage = () => {
     onValue(taskRef, (snapshot) => {
       let arr = [];
       snapshot.forEach((item) => {
-        if (item.val().taskId==taskDetail.id) {
+        if (item.val().taskId == taskDetail.id) {
           arr.push({ ...item.val(), id: item.key });
         }
       });
@@ -108,6 +156,11 @@ const TaskDetailPage = () => {
     });
   }, [db, taskDetail]);
 
+  const handleAssigneeRemove = (member) => {
+    remove(ref(db, "assignee/" + member.id)).then(() =>
+      toast.success("Assignee Removed")
+    );
+  };
 
   const priorityStyles = {
     Low: "bg-blue-100 text-blue-600",
@@ -159,6 +212,81 @@ const TaskDetailPage = () => {
           users={listForAssignee}
           onClose={() => setActiveAssigneeModal(false)}
         />
+      )}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white w-[400px] rounded-xl shadow-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">Update Task</h2>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Status */}
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full mt-1 p-2 border rounded-lg"
+                >
+                  <option>Pending</option>
+                  <option>InProgress</option>
+                  <option>Completed</option>
+                </select>
+              </div>
+
+              {/* Priority */}
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Priority
+                </label>
+                <select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleChange}
+                  className="w-full mt-1 p-2 border rounded-lg"
+                >
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option>High</option>
+                  <option>Critical</option>
+                </select>
+              </div>
+
+              {/* Due Date */}
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Due Date
+                </label>
+                <input
+                  type="date"
+                  name="dueDate"
+                  value={formData.dueDate}
+                  onChange={handleChange}
+                  className="w-full mt-1 p-2 border rounded-lg"
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="px-4 py-2 bg-gray-200 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-primary text-white rounded-lg"
+                >
+                  Update
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
@@ -231,7 +359,11 @@ const TaskDetailPage = () => {
               {/* New Comment */}
               <div className="flex space-x-3 mb-6">
                 <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                  <img src={user?.photoURL} className="w-full h-full object-cover rounded-full" alt="" />
+                  <img
+                    src={user?.photoURL}
+                    className="w-full h-full object-cover rounded-full"
+                    alt=""
+                  />
                 </div>
                 <div className="flex-1">
                   <textarea
@@ -242,7 +374,10 @@ const TaskDetailPage = () => {
                     rows="3"
                   />
                   <div className="flex justify-end mt-2">
-                    <button onClick={handleAddComment} className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2">
+                    <button
+                      onClick={handleAddComment}
+                      className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                    >
                       <Send className="h-4 w-4" />
                       <span>Comment</span>
                     </button>
@@ -257,10 +392,18 @@ const TaskDetailPage = () => {
                     <div
                       className={`w-8 h-8 rounded-full  flex items-center justify-center text-white text-xs font-medium`}
                     >
-                      <img src={user?.photoURL} className="w-full h-full object-cover rounded-full" alt="" />
+                      <img
+                        src={user?.photoURL}
+                        className="w-full h-full object-cover rounded-full"
+                        alt=""
+                      />
                     </div>
                     <div className="flex-1">
-                      <div className={`bg-gray-50 ${comment.whoCommentId==comment.adminId && "bg-red-50"} rounded-lg p-3`}>
+                      <div
+                        className={`bg-gray-50 ${
+                          comment.whoCommentId == comment.adminId && "bg-red-50"
+                        } rounded-lg p-3`}
+                      >
                         <div className="flex items-center space-x-2 mb-1">
                           <span className="font-medium text-gray-800">
                             {comment.whoCommentName}
@@ -322,37 +465,87 @@ const TaskDetailPage = () => {
                   </span>
                 </div>
               </div>
+              <button
+                onClick={() => setIsOpen(true)}
+                className="mt-4 w-full bg-primary hover:bg-primary/70 text-white py-2 rounded-lg font-medium"
+              >
+                Update Task
+              </button>
             </div>
 
             {/* Assignees */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              {" "}
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800">Assignees</h3>
+                {" "}
+                <h3 className="font-semibold text-gray-800">Assignees</h3>{" "}
                 <button
                   onClick={() => setActiveAssigneeModal(true)}
                   className="text-purple-600 hover:text-purple-700"
                 >
-                  <Plus className="h-5 w-5" />
-                </button>
+                  {" "}
+                  <Plus className="h-5 w-5" />{" "}
+                </button>{" "}
               </div>
-
               <div className="space-y-3">
                 {assignee.map((member) => (
-                  <div key={member?.id} className="flex items-center space-x-3">
-                    {renderAvatar(member)}
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800 text-sm">
-                        {member?.assigneeName}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {member.assigneeRole}
-                      </p>
+                  <div key={member?.id} className="relative">
+                    <div className="flex items-center space-x-3">
+                      {renderAvatar(member)}
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-800 text-sm">
+                          {member?.assigneeName}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {member.assigneeRole}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => toggleDropdown(member.id)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
                     </div>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
+
+                    {/* Dropdown */}
+                    {openDropdown === member.id && (
+                      <div className="absolute right-0 mt-2 w-32 bg-white border border-primary rounded-lg shadow-lg z-10">
+                        <button
+                          onClick={() => handleAssigneeRemove(member)}
+                          className="flex items-center gap-2 w-full rounded-lg px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Remove
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
+                {assignee.length === 0 && (
+                  <div className="flex flex-col items-center justify-center p-6 rounded-xl border border-dashed border-gray-300 bg-gray-50 text-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-10 h-10 text-gray-400 mb-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M17 20h5V4H2v16h5m10 0v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6m10 0H7"
+                      />
+                    </svg>
+                    <p className="text-gray-500 text-sm font-medium">
+                      No assignee yet
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      Assign members to this task
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

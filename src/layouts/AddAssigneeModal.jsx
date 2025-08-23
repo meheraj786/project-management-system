@@ -20,25 +20,22 @@ const AddAssigneeModal = ({ taskDetail, onClose, users }) => {
       return;
     }
 
-    // const selectedUserObjects = users.filter((u) =>
-    //   selectedUsers.includes(u.id)
-    // );
+    const selectedUserObjects = users.filter((u) =>
+      selectedUsers.includes(u.id)
+    );
 
-    users.forEach((user) => {
-      set(
-        push(ref(db, "assignee/")),
-        {
-          projectId: taskDetail.projectId || "",
-          adminId: taskDetail.adminId || "",
-          taskId: taskDetail.id || "",
-          assigneeId: user.memberId,
-          assigneeName: user.memberName,
-          assigneeImage: user.memberImage,
-          assigneeRole: user.memberRole || "",
-        }
-      )
+    selectedUserObjects.forEach((user) => {
+      set(push(ref(db, "assignee/")), {
+        projectId: taskDetail.projectId || "",
+        adminId: taskDetail.adminId || "",
+        taskId: taskDetail.id || "",
+        assigneeId: user.memberId,
+        assigneeName: user.memberName,
+        assigneeImage: user.memberImage,
+        assigneeRole: user.memberRole || "",
+      })
         .then(() => {
-          toast.success("Successfully added assignee");
+          toast.success(`${user.memberName} added as assignee`);
         })
         .catch((err) => toast.error(err.message));
     });
