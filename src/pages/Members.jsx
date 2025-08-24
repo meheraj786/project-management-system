@@ -20,10 +20,11 @@ import {
 import { AddMemberModal } from "../layouts/AddMemberModal";
 import { useSelector } from "react-redux";
 import { getDatabase, onValue, ref } from "firebase/database";
+import CustomLoader from "../layouts/CustomLoader";
 
 const Members = () => {
-  // const[addMemberPop, setAddMemberPop]= useState(false)
   const user = useSelector((state) => state.userInfo.value);
+  const [loading, setLoading]= useState(true)
   const db = getDatabase();
   const [departments, setDepartments] = useState([]);
   const [members, setMembers] = useState([]);
@@ -45,51 +46,9 @@ const Members = () => {
         const department = [...set];
         return department;
       });
+      setLoading(false)
     });
   }, []);
-  // const [members, setMembers] = useState([
-  //   {
-  //     id: 1,
-  //     name: 'John Smith',
-  //     email: 'john.smith@company.com',
-  //     role: 'Product Manager',
-  //     avatar: 'J',
-  //     color: 'bg-blue-500',
-  //     joinDate: '2024-01-15',
-  //     status: 'Active'
-  //   },
-  //   {
-  //     id: 2,
-  //     name: 'Sarah Wilson',
-  //     email: 'sarah.wilson@company.com',
-  //     role: 'UI/UX Designer',
-  //     avatar: 'S',
-  //     color: 'bg-green-500',
-  //     joinDate: '2024-02-20',
-  //     status: 'Active'
-  //   },
-  //   {
-  //     id: 3,
-  //     name: 'Mike Johnson',
-  //     email: 'mike.johnson@company.com',
-  //     role: 'Frontend Developer',
-  //     avatar: 'M',
-  //     color: 'bg-primary',
-  //     joinDate: '2024-03-10',
-  //     status: 'Active'
-  //   },
-  //   {
-  //     id: 4,
-  //     name: 'Lisa Chen',
-  //     email: 'lisa.chen@company.com',
-  //     role: 'Backend Developer',
-  //     avatar: 'L',
-  //     color: 'bg-orange-500',
-  //     joinDate: '2024-01-30',
-  //     status: 'Active'
-  //   }
-  // ]);
-
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [newMember, setNewMember] = useState({
@@ -115,29 +74,11 @@ const Members = () => {
       member.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // const addMember = () => {
-  //   if (newMember.name && newMember.email && newMember.role) {
-  //     const colors = ['bg-blue-500', 'bg-green-500', 'bg-primary', 'bg-orange-500', 'bg-pink-500', 'bg-indigo-500'];
-  //     const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
-  //     const member = {
-  //       id: Date.now(),
-  //       ...newMember,
-  //       avatar: newMember.name.charAt(0).toUpperCase(),
-  //       color: randomColor,
-  //       joinDate: new Date().toISOString().split('T')[0],
-  //       status: 'Active'
-  //     };
-
-  //     setMembers([...members, member]);
-  //     setNewMember({ name: '', email: '', role: '' });
-  //     setShowAddModal(false);
-  //   }
-  // };
-
   const removeMember = (id) => {
     setMembers(members.filter((member) => member.id !== id));
   };
+
+  if (loading) return <CustomLoader/>
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -264,9 +205,6 @@ const Members = () => {
                 </div>
 
                 <div className="relative">
-                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors group">
-                    <MoreHorizontal className="w-5 h-5 text-gray-400" />
-                  </button>
                   <div className="absolute right-0 top-full mt-1 opacity-0 group-hover:opacity-100 bg-white shadow-lg border border-gray-200 rounded-lg py-1 min-w-32 z-10 transition-opacity">
                     <button
                       onClick={() => removeMember(member.id)}

@@ -14,10 +14,11 @@ import Conversation from "../layouts/Conversation";
 import { getDatabase, onValue, ref, remove } from "firebase/database";
 import { useSelector } from "react-redux";
 import { Link, Outlet } from "react-router";
+import CustomLoader from '../layouts/CustomLoader.jsx'
 
 const Messages = () => {
-  const [selectedProject, setSelectedProject] = useState(1);
-
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [loading, setLoading]= useState(true)
   const user = useSelector((state) => state.userInfo.value);
   const [projects, setProjects] = useState([]);
   const [ownProjectsId, setOwnProjectsId] = useState([]);
@@ -40,6 +41,7 @@ const Messages = () => {
         }
       });
       setProjects(arr);
+      setLoading(false)
     });
   }, [db, ownProjectsId]);
   useEffect(() => {
@@ -72,13 +74,13 @@ const Messages = () => {
   const removeMsgNotif = (id) => {
     const filtered = msgNotif.filter((n) => n.projectId === id);
 
-    // Remove from Firebase
     filtered.forEach((m) => remove(ref(db, "messagenotification/" + m.id)));
 
-    // Update local state immediately
     setMsgNotif(msgNotif.filter((n) => n.projectId !== id));
   };
 
+
+  if (loading)  return <CustomLoader/>
   return (
     <div className="flex h-[91vh] bg-gray-50">
       {/* Projects Sidebar */}

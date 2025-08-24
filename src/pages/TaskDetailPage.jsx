@@ -36,6 +36,7 @@ import SubtasksComponent from "../components/subTaskComponent/SubTaskComponent";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { UserContext } from "../context/UserContext";
+import CustomLoader from "../layouts/CustomLoader";
 
 const TaskDetailPage = () => {
   const [taskDetail, setTaskDetail] = useState(null);
@@ -64,7 +65,8 @@ const TaskDetailPage = () => {
   const [activeMenu, setActiveMenu] = useState(null);
   const [image, setImage] = useState("");
   const [imageList, setImageList] = useState([]);
-  const navigate=useNavigate()
+  const [loading, setLoading]= useState(true)
+  const navigate = useNavigate();
 
   const handleEditComment = (comment) => {
     setEditComment(comment);
@@ -104,13 +106,14 @@ const TaskDetailPage = () => {
     });
   };
 
-  // handle submit
   const handleSubmit = (e) => {
     e.preventDefault();
     update(ref(db, "tasks/" + formData.id), {
-      status: formData.status,
-      priority: formData.priority,
-      dueDate: formData.dueDate,
+      status: formData.status || "Todo",
+      priority: formData.priority || "Low",
+      dueDate: formData.dueDate
+        ? moment(formData.dueDate).format("YYYY-MM-DD")
+        : "",
     }).then(() => {
       set(push(ref(db, "activity/")), {
         userid: user?.uid,
@@ -194,6 +197,7 @@ const TaskDetailPage = () => {
         arr.push({ ...item.val(), id: item.key });
       });
       setTaskDetail(arr.find((t) => t.id == id));
+      setLoading(false)
     });
   }, [db, id]);
   useEffect(() => {
@@ -221,40 +225,49 @@ const TaskDetailPage = () => {
     High: "bg-orange-100 text-orange-600",
     Critical: "bg-red-100 text-red-600",
   };
-  const handleAddComment = async () => {
-    if (newComment.trim()) {
-      try {
-        await set(push(ref(db, "comment/")), {
-          taskTitle: newComment,
-          whoCommentName: user?.displayName || "Unknown User",
-          whoCommentId: user?.uid,
-          whoCommentImage: user?.photoURL || "",
-          taskId: taskDetail?.id,
-          projectId: taskDetail?.projectId,
-          adminId: taskDetail?.adminId,
-          createdAt: moment().format(),
-        });
-        await set(push(ref(db, "activity/")), {
-          userid: user?.uid,
-          userName: user?.displayName,
-          userImage: user?.photoURL,
-          acitvityIn: "task",
-          projectId: taskDetail?.projectId,
-          taskId: taskDetail?.id,
-          action: "Comment",
-          content: `comment on a task.`,
-          time: moment().format(),
-          type: "comment",
-        });
+  const handleAddComment = () => {
+    if (!newComment.trim()) return;
 
+    const commentRef = push(ref(db, "comment/"));
+    const activityRef = push(ref(db, "activity/"));
+
+    const commentData = {
+      taskTitle: newComment,
+      whoCommentName: user?.displayName || "Unknown User",
+      whoCommentId: user?.uid || "unknown",
+      whoCommentImage: user?.photoURL || "",
+      taskId: taskDetail?.id || "unknown",
+      projectId: taskDetail?.projectId || "unknown",
+      adminId: taskDetail?.adminId || "unknown",
+      createdAt: moment().format(),
+    };
+
+    const activityData = {
+      userid: user?.uid || "unknown",
+      userName: user?.displayName || "Unknown User",
+      userImage: user?.photoURL || "",
+      acitvityIn: "task",
+      projectId: taskDetail?.projectId || "unknown",
+      taskId: taskDetail?.id || "unknown",
+      action: "Comment",
+      content: `comment on a task.`,
+      time: moment().format(),
+      type: "comment",
+    };
+
+    set(commentRef, commentData)
+      .then(() => {
+        return set(activityRef, activityData);
+      })
+      .then(() => {
         toast.success("Comment added successfully!");
         setNewComment("");
         setAddSubTaskMode(false);
-      } catch (error) {
-        console.error("Error adding subtask:", error);
-        toast.error("Failed to add subtask");
-      }
-    }
+      })
+      .catch((error) => {
+        console.error("Error adding comment:", error);
+        toast.error("Failed to add comment");
+      });
   };
 
   const renderAvatar = (member) => (
@@ -325,13 +338,17 @@ const TaskDetailPage = () => {
       toast.success("Image Removed");
     });
   };
-    const taskRemoveHandler = () => {
+  const taskRemoveHandler = () => {
     remove(ref(db, "tasks/" + taskDetail.id)).then(() => {
-      toast.success("Task Deleted")
-      assignee.map((a)=>a.taskId==taskDetail.id ? remove(ref(db, "assignee/" + a.id)) : null)
-      navigate("/")
+      toast.success("Task Deleted");
+      assignee.map((a) =>
+        a.taskId == taskDetail.id ? remove(ref(db, "assignee/" + a.id)) : null
+      );
+      navigate("/");
     });
   };
+
+  if (loading) return <CustomLoader/>
 
   return (
     <div className="min-h-screen font-primary bg-gray-50">
@@ -473,17 +490,7 @@ const TaskDetailPage = () => {
             </h1>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Star className="h-5 w-5 text-gray-400" />
-            </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Share2 className="h-5 w-5 text-gray-400" />
-            </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <MoreHorizontal className="h-5 w-5 text-gray-400" />
-            </button>
-          </div>
+
         </div>
       </div>
 
@@ -508,7 +515,7 @@ const TaskDetailPage = () => {
                     {taskDetail?.status}
                   </span>
                 </div>
-                <button className="text-gray-400 hover:text-gray-600">
+                <button onClick={()=>setIsOpen(true)} className="text-gray-400 hover:text-gray-600">
                   <Edit className="h-5 w-5" />
                 </button>
               </div>
@@ -638,16 +645,14 @@ const TaskDetailPage = () => {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                           </div>
                         </a>
-                        {
-                          img.whoAddId == user?.uid && 
-                        <button
-                          onClick={() => removeImage(img.id)}
-                          className="absolute -top-2 -right-2 p-1.5 bg-white border-2 border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                        }
-
+                        {img.whoAddId == user?.uid && (
+                          <button
+                            onClick={() => removeImage(img.id)}
+                            className="absolute -top-2 -right-2 p-1.5 bg-white border-2 border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
 
                         {/* Image index indicator */}
                         <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-white/90 backdrop-blur-sm text-xs font-medium text-gray-700 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -809,8 +814,21 @@ const TaskDetailPage = () => {
 
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Due Date</span>
-                  <span className="text-red-600 text-sm">
-                    {taskDetail?.dueDate}
+                  <span
+                    className={`text-sm ${
+                      taskDetail?.status === "Completed"
+                        ? "text-green-600"
+                        : taskDetail?.priority === "High" ||
+                          taskDetail?.priority === "Critical"
+                        ? "text-red-600"
+                        : "text-yellow-600"
+                    }`}
+                  >
+                    {taskDetail?.dueDate
+                      ? moment(taskDetail.dueDate).format(
+                          "DD MMM YYYY, hh:mm A"
+                        )
+                      : "No due date"}
                   </span>
                 </div>
               </div>

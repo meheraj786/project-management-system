@@ -28,6 +28,7 @@ import { getDatabase, onValue, ref } from "firebase/database";
 import Flex from "../layouts/Flex";
 import { Link } from "react-router";
 import ProjectStatusChart from "../components/projectStatusChart/ProjectStatusChart";
+import CustomLoader from "../layouts/CustomLoader";
 
 const Home = () => {
   const user = useSelector((state) => state.userInfo.value);
@@ -38,6 +39,7 @@ const Home = () => {
   const [tasks, setTasks] = useState([]);
   const [ownProjectsId, setOwnProjectsId] = useState([]);
   const [ownTaskId, setOwnTaskId]= useState([])
+  const [loading, setLoading]= useState(true)
   useEffect(() => {
     const starCountRef = ref(db, "tasks/");
     onValue(starCountRef, (snapshot) => {
@@ -77,6 +79,7 @@ const Home = () => {
         }
       });
       setProjects(arr);
+      setLoading(false)
     });
   }, [db, ownProjectsId]);
   useEffect(() => {
@@ -156,6 +159,8 @@ const Home = () => {
     Critical: "bg-red-100 text-red-600",
   };
 
+  if (loading) return <CustomLoader/>
+
 
 
   return (
@@ -212,10 +217,7 @@ const Home = () => {
 
           {currentUser.accountType == "admin" && (
             <div className="flex items-center space-x-3 mt-6 md:mt-0">
-              <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200">
-                <Calendar className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-700 font-medium">Today</span>
-              </button>
+
 
               <button
                 onClick={() => setProjectModal(true)}
@@ -320,7 +322,7 @@ const Home = () => {
                   <Link to={`/project/${project.id}`}>
                     <div
                       key={project.id}
-                      className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="border border-gray-100 my-3 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
@@ -351,9 +353,6 @@ const Home = () => {
                             {project.priority}
                           </span>
                         </div>
-                        <button className="text-gray-400 hover:text-gray-600">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
                       </div>
                       <p
                         className={`px-2 py-1 rounded mb-4 text-xs font-medium

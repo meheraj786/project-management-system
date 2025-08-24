@@ -187,10 +187,19 @@ const ProjectUpdateModal = ({ members, projectData, onClose }) => {
                 <span>Start Date</span>
               </label>
               <input
-                type="date"
+                type="datetime-local"
                 name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
+                value={
+                  formData.startDate
+                    ? moment(formData.startDate).format("YYYY-MM-DDTHH:mm")
+                    : ""
+                }
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    startDate: moment(e.target.value).format(),
+                  })
+                }
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
               />
             </div>
@@ -202,10 +211,19 @@ const ProjectUpdateModal = ({ members, projectData, onClose }) => {
                 <span>End Date</span>
               </label>
               <input
-                type="date"
+                type="datetime-local"
                 name="endDate"
-                value={formData.endDate}
-                onChange={handleChange}
+                value={
+                  formData.endDate
+                    ? moment(formData.endDate).format("YYYY-MM-DDTHH:mm")
+                    : ""
+                }
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    endDate: moment(e.target.value).format(),
+                  })
+                }
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
               />
             </div>

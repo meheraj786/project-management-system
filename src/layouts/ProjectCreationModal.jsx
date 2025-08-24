@@ -13,8 +13,11 @@ import {
 import { useSelector } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
 import { getDatabase, push, ref, set } from "firebase/database";
+import moment from "moment";
+import { useNavigate } from "react-router";
 
 const ProjectCreationModal = ({ member, onClose }) => {
+  const navigate= useNavigate()
   const db = getDatabase();
   const user = useSelector((state) => state.userInfo.value);
   const [formData, setFormData] = useState({
@@ -43,43 +46,6 @@ const ProjectCreationModal = ({ member, onClose }) => {
     "Other",
   ];
 
-  const teamMembers = [
-    {
-      id: 1,
-      name: "John Smith",
-      email: "john@example.com",
-      avatar: "bg-blue-500",
-      initial: "J",
-    },
-    {
-      id: 2,
-      name: "Sarah Wilson",
-      email: "sarah@example.com",
-      avatar: "bg-green-500",
-      initial: "S",
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      email: "mike@example.com",
-      avatar: "bg-purple-500",
-      initial: "M",
-    },
-    {
-      id: 4,
-      name: "Lisa Chen",
-      email: "lisa@example.com",
-      avatar: "bg-pink-500",
-      initial: "L",
-    },
-    {
-      id: 5,
-      name: "Tom Wilson",
-      email: "tom@example.com",
-      avatar: "bg-orange-500",
-      initial: "T",
-    },
-  ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -89,22 +55,7 @@ const ProjectCreationModal = ({ member, onClose }) => {
     }));
   };
 
-  const handleAddTag = () => {
-    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()],
-      }));
-      setNewTag("");
-    }
-  };
 
-  const handleRemoveTag = (tagToRemove) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((tag) => tag !== tagToRemove),
-    }));
-  };
 
   const handleMemberSelect = (member) => {
     setSelectedMembers((prev) => {
@@ -116,6 +67,7 @@ const ProjectCreationModal = ({ member, onClose }) => {
       }
     });
   };
+
 
 
 const handleSubmit = (e) => {
@@ -136,12 +88,14 @@ const handleSubmit = (e) => {
   }
 
   const db = getDatabase();
-
   const projectRef = push(ref(db, "projects/"));
   const projectId = projectRef.key;
 
   const projectData = {
     ...formData,
+    createdAt: moment().format("YYYY-MM-DD HH:mm:ss"),
+    startDate: moment(startDate).format("YYYY-MM-DD HH:mm:ss"), 
+    endDate: moment(endDate).format("YYYY-MM-DD HH:mm:ss"), 
   };
 
   set(projectRef, projectData)
@@ -153,19 +107,19 @@ const handleSubmit = (e) => {
           memberId: m.id,
           memberImage: m.profileImage,
           memberName: m.name,
-          memberRole: m.role || ""
-        }).then(()=>{
+          memberRole: m.role || "",
+        }).then(() => {
           set(push(ref(db, "notification/")), {
-          reciverId: memberRef.key,
-          adminId: user?.uid,
-          adminName: user?.displayName,
-          adminImage: user?.photoURL,
-          content: `${user?.displayName} added you in their project`
+            reciverId: memberRef.key,
+            adminId: user?.uid,
+            adminName: user?.displayName,
+            adminImage: user?.photoURL,
+            content: `${user?.displayName} added you in their project`,
+          });
         });
-        })
-        
       });
       toast.success("Project Created Successfully");
+      navigate(`/project/${projectId}`)
       onClose();
     })
     .catch((err) => {

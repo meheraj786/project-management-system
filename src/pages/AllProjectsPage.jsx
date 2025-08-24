@@ -20,9 +20,10 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router";
 import ProjectCreationModal from "../layouts/ProjectCreationModal";
 import { UserContext } from "../context/UserContext";
-
+import CustomLoader from '../layouts/CustomLoader.jsx'
 const AllProjectsPage = () => {
   const [projects, setProjects] = useState([]);
+  const [loading, setLoading]= useState(true)
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedPriority, setSelectedPriority] = useState("All");
@@ -35,7 +36,6 @@ const AllProjectsPage = () => {
 
 
 
-  // Sample data - replace with your actual data
 
   useEffect(() => {
     const starCountRef = ref(db, "projects/");
@@ -52,6 +52,7 @@ const AllProjectsPage = () => {
         }
       });
       setProjects(arr);
+      setLoading(false)
     });
   }, [db, ownProjectsId]);
   useEffect(() => {
@@ -81,7 +82,6 @@ const AllProjectsPage = () => {
     });
   }, []);
 
-  // Filter projects
   const filteredProjects = projects.filter((project) => {
     const matchesSearch =
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,7 +95,6 @@ const AllProjectsPage = () => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  // Group projects by status
   const groupedProjects = {
     Todo: filteredProjects.filter((p) => p.status === "Todo"),
     "In Progress": filteredProjects.filter((p) => p.status === "In Progress"),
@@ -103,7 +102,6 @@ const AllProjectsPage = () => {
     Done: filteredProjects.filter((p) => p.status === "Done"),
   };
 
-  // Status colors
   const getStatusColor = (status) => {
     switch (status) {
       case "Todo":
@@ -119,7 +117,6 @@ const AllProjectsPage = () => {
     }
   };
 
-  // Priority colors
   const getPriorityColor = (priority) => {
     switch (priority) {
       case "High":
@@ -133,7 +130,6 @@ const AllProjectsPage = () => {
     }
   };
 
-  // Format date
   const formatDate = (dateString) => {
     if (!dateString) return "Not set";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -143,10 +139,11 @@ const AllProjectsPage = () => {
     });
   };
 
-  // Project Card Component
+  if (loading) return <CustomLoader/>
+
   const ProjectCard = ({ project }) => (
     <Link to={`/project/${project.id}`}>
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+      <div className="bg-white rounded-xl p-6 my-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-800 mb-2">

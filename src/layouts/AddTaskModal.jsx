@@ -12,6 +12,9 @@ export const AddTaskModal = ({ projectData, onClose }) => {
     status: "Todo",
     priority: "Low",
     dueDate: "",
+    createdDate: moment().format(),
+    adminId: projectData?.adminId || "",
+    projectId: projectData?.id || "",
   });
 
   const [errors, setErrors] = useState({});
@@ -63,39 +66,43 @@ export const AddTaskModal = ({ projectData, onClose }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      const newTask = {
-        ...formData,
-        adminId: projectData?.adminId,
-        projectId: projectData?.id,
-        createdAt: moment().format(),
-      };
-      set(push(ref(db, "tasks/"), newTask))
-        .then(() => {
-          toast.success("Task Created");
-          resetForm();
-          handleClose()
-        })
-        .catch((err) => {
-          console.log(err.message);
-        });
-        handleClose()
-    }else{
-      toast.error("Please Fill All Fields")
-    }
-  };
+const handleSubmit = () => {
+  if (validateForm()) {
+    const newTask = {
+      title: formData.title || "",
+      description: formData.description || "",
+      status: formData.status || "Todo",
+      priority: formData.priority || "Low",
+      dueDate: formData.dueDate || "",
+      createdAt: moment().format(),
+      adminId: formData.adminId || "",
+      projectId: formData.projectId || "",
+    };
+
+    const tasksRef = ref(db, "tasks/");
+    const newTaskRef = push(tasksRef); 
+
+    set(newTaskRef, newTask)
+      .then(() => {
+        toast.success("Task Created");
+        handleClose();
+      })
+      .catch((err) => toast.error(err.message));
+  } else {
+    toast.error("Please Fill All Fields");
+  }
+};
+
 
   const resetForm = () => {
     setFormData({
       title: "",
       description: "",
-      status: "To Do",
+      status: "Todo",
       priority: "Low",
       dueDate: "",
-      createdDate: new Date().toISOString().split("T")[0],
+      createdDate: moment().format("YYYY-MM-DD HH:mm:ss"),
     });
-    setErrors({});
   };
 
   const handleClose = () => {
@@ -115,7 +122,7 @@ export const AddTaskModal = ({ projectData, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <Toaster position="top-right"/>
+      <Toaster position="top-right" />
       <div className="bg-white rounded-xl w-full max-w-2xl max-h-[95vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -250,10 +257,17 @@ export const AddTaskModal = ({ projectData, onClose }) => {
                 Due Date
               </label>
               <input
-                type="date"
-                value={formData.dueDate}
+                type="datetime-local"
+                value={
+                  formData.dueDate
+                    ? moment(formData.dueDate).format("YYYY-MM-DDTHH:mm")
+                    : ""
+                }
                 onChange={(e) =>
-                  setFormData({ ...formData, dueDate: e.target.value })
+                  setFormData({
+                    ...formData,
+                    dueDate: moment(e.target.value).format(), // full ISO date-time save হবে
+                  })
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
               />
@@ -301,12 +315,17 @@ export const AddTaskModal = ({ projectData, onClose }) => {
                     <span className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       Created:{" "}
-                      {new Date(formData.createdDate).toLocaleDateString()}
+                      {moment(formData.createdDate).format(
+                        "DD MMM YYYY, hh:mm A"
+                      )}
                     </span>
                     {formData.dueDate && (
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        Due: {new Date(formData.dueDate).toLocaleDateString()}
+                        Due:{" "}
+                        {moment(formData.dueDate).format(
+                          "DD MMM YYYY, hh:mm A"
+                        )}
                       </span>
                     )}
                   </div>

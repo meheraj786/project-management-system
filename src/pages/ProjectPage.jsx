@@ -40,6 +40,7 @@ import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { UserContext } from "../context/UserContext";
 import moment from "moment";
+import CustomLoader from '../layouts/CustomLoader'
 
 const ProjectProfile = () => {
   const [addTaskPop, setAddTaskPop] = useState(false);
@@ -59,6 +60,7 @@ const ProjectProfile = () => {
   const [taskImageList, setTaskImageList] = useState([]);
   const [ownTaskId, setOwnTaskId] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
+  const [loading, setLoading]= useState(true)
 
   useEffect(() => {
     const starCountRef = ref(db, "activity/");
@@ -80,6 +82,7 @@ const ProjectProfile = () => {
         const projects = item.val();
         if (item.key == id) {
           setProjectData({ ...projects, id: item.key });
+          setLoading(false)
         }
       });
     });
@@ -180,6 +183,8 @@ const ProjectProfile = () => {
   }, [db, id, projectData]);
 
 
+  if (loading) return <CustomLoader/>
+
   const renderAvatar = (member) => (
     <div
       key={member.id}
@@ -197,7 +202,7 @@ const ProjectProfile = () => {
     <Link to={`/task/${task.id}`}>
       <div
         key={task.id}
-        className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+        className="bg-white rounded-lg p-4  mb-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
       >
         <div className="flex justify-between items-start mb-3">
           {task.priority && (
@@ -218,9 +223,6 @@ const ProjectProfile = () => {
             </span>
           )}
 
-          <button className="text-gray-400 hover:text-gray-600">
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
         </div>
 
         <h3 className="font-semibold text-gray-800 mb-2">{task?.title}</h3>
@@ -293,14 +295,14 @@ const ProjectProfile = () => {
       memberName: m.name,
       memberRole: m.role || "",
     }).then(() => {
-      toast.success("Member Added")
-    set(push(ref(db, "notification/")), {
-              reciverId: m.id,
-              adminId: user?.uid,
-              adminName: user?.displayName,
-              adminImage: user?.photoURL,
-              content: `${user?.displayName} added you in their project`
-            });
+      toast.success("Member Added");
+      set(push(ref(db, "notification/")), {
+        reciverId: m.id,
+        adminId: user?.uid,
+        adminName: user?.displayName,
+        adminImage: user?.photoURL,
+        content: `${user?.displayName} added you in their project`,
+      });
     });
   };
   const removeMemberHandler = (id) => {
@@ -308,15 +310,15 @@ const ProjectProfile = () => {
     const assigneeRemoveId = assignee.find((m) => m.assigneeId == id);
 
     remove(ref(db, "members/" + removeid.id)).then(() => {
-      toast.success("Member Removed")
+      toast.success("Member Removed");
       set(push(ref(db, "notification/")), {
-              reciverId: removeid.memberId,
-              adminId: user?.uid,
-              adminName: user?.displayName,
-              adminImage: user?.photoURL,
-              content: `${user?.displayName} removed you from their project`
-            });
-      remove(ref(db, "assignee/" + assigneeRemoveId.id))
+        reciverId: removeid.memberId,
+        adminId: user?.uid,
+        adminName: user?.displayName,
+        adminImage: user?.photoURL,
+        content: `${user?.displayName} removed you from their project`,
+      });
+      remove(ref(db, "assignee/" + assigneeRemoveId.id));
     });
   };
   const getActivityIcon = (type) => {
@@ -467,14 +469,6 @@ const ProjectProfile = () => {
             <h1 className="text-3xl font-bold text-gray-800">
               {projectData?.title}
             </h1>
-            <div className="flex items-center space-x-2">
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <Edit className="h-5 w-5 text-primary" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <Eye className="h-5 w-5 text-primary" />
-              </button>
-            </div>
           </div>
 
           {/* Members Section */}
@@ -552,11 +546,7 @@ const ProjectProfile = () => {
             <span className="text-sm text-gray-600">Start:</span>
             <span className="text-sm font-medium text-gray-800">
               {projectData?.startDate
-                ? new Date(projectData.startDate).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })
+                ? moment(projectData.startDate).format("DD MMM YYYY, hh:mm A")
                 : "Not set"}
             </span>
           </div>
@@ -568,34 +558,27 @@ const ProjectProfile = () => {
             <div className="flex flex-col">
               <span className="text-sm font-medium text-gray-800">
                 {projectData?.endDate
-                  ? new Date(projectData.endDate).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
+                  ? moment(projectData.endDate).format("DD MMM YYYY, hh:mm A")
                   : "Not set"}
               </span>
+
               {projectData?.endDate && (
                 <span
                   className={`text-xs ${(() => {
-                    const today = new Date();
-                    const end = new Date(projectData.endDate);
-                    const diffDays = Math.ceil(
-                      (end - today) / (1000 * 60 * 60 * 24)
-                    );
+                    const today = moment();
+                    const end = moment(projectData.endDate);
+                    const diffDays = end.diff(today, "days");
 
-                    if (diffDays < 0) return "text-red-600";
-                    if (diffDays === 0) return "text-orange-600";
-                    if (diffDays <= 7) return "text-yellow-600";
-                    return "text-green-600";
+                    if (diffDays < 0) return "text-red-600"; // overdue
+                    if (diffDays === 0) return "text-orange-600"; // today
+                    if (diffDays <= 7) return "text-yellow-600"; // within 7 days
+                    return "text-green-600"; // more than 7 days
                   })()}`}
                 >
                   {(() => {
-                    const today = new Date();
-                    const end = new Date(projectData.endDate);
-                    const diffDays = Math.ceil(
-                      (end - today) / (1000 * 60 * 60 * 24)
-                    );
+                    const today = moment();
+                    const end = moment(projectData.endDate);
+                    const diffDays = end.diff(today, "days");
 
                     if (diffDays < 0)
                       return `${Math.abs(diffDays)} days overdue`;
@@ -666,15 +649,14 @@ const ProjectProfile = () => {
               </span>
             </button>
           )}
-<Link to={`/messages/${projectData?.id}`}>
-
-          <button className="flex items-center space-x-2 px-4 py-2 border border-primary group hover:bg-primary hover:text-white rounded-lg bg-white transition-colors">
-            <MessageCircleDashed className="h-4 w-4 group-hover:text-gray-200 text-gray-500" />
-            <span className="text-sm group-hover:text-white text-gray-700">
-              Message
-            </span>
-          </button>
-</Link>
+          <Link to={`/messages/${projectData?.id}`}>
+            <button className="flex items-center space-x-2 px-4 py-2 border border-primary group hover:bg-primary hover:text-white rounded-lg bg-white transition-colors">
+              <MessageCircleDashed className="h-4 w-4 group-hover:text-gray-200 text-gray-500" />
+              <span className="text-sm group-hover:text-white text-gray-700">
+                Message
+              </span>
+            </button>
+          </Link>
         </div>
 
         <div className="flex items-center space-x-3">
@@ -697,10 +679,6 @@ const ProjectProfile = () => {
               )}
             </>
           )}
-
-          <button className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center hover:bg-purple-700 transition-colors">
-            <Grid3X3 className="h-5 w-5 text-white" />
-          </button>
         </div>
       </div>
 
@@ -716,9 +694,6 @@ const ProjectProfile = () => {
                 {tasks.filter((t) => t.status == "Todo").length}
               </span>
             </div>
-            <button className="text-primary hover:text-purple-700">
-              <Plus className="h-5 w-5" />
-            </button>
           </div>
 
           <div className="space-y-3">
@@ -738,9 +713,6 @@ const ProjectProfile = () => {
                 {tasks.filter((t) => t.status == "InProgress").length}
               </span>
             </div>
-            <button className="text-primary hover:text-purple-700">
-              <Plus className="h-5 w-5" />
-            </button>
           </div>
 
           <div className="space-y-3">
@@ -760,9 +732,6 @@ const ProjectProfile = () => {
                 {tasks.filter((t) => t.status == "Completed").length}
               </span>
             </div>
-            <button className="text-primary hover:text-purple-700">
-              <Plus className="h-5 w-5" />
-            </button>
           </div>
 
           <div className="space-y-3">
