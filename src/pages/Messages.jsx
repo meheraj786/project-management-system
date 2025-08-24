@@ -11,7 +11,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import Conversation from "../layouts/Conversation";
-import { getDatabase, onValue, ref } from "firebase/database";
+import { getDatabase, onValue, ref, remove } from "firebase/database";
 import { useSelector } from "react-redux";
 import { Link, Outlet } from "react-router";
 
@@ -23,53 +23,8 @@ const Messages = () => {
   const [ownProjectsId, setOwnProjectsId] = useState([]);
   const db = getDatabase();
 
-  // Sample projects data
-  // const [projects] = useState([
-  //   {
-  //     id: 1,
-  //     name: "E-commerce Website",
-  //     avatar:
-  //       "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=50&h=50&fit=crop",
-  //     lastMessage: "Design files are ready for review",
-  //     lastMessageTime: "2m ago",
-  //     unreadCount: 3,
-  //     members: 8,
-  //     isOnline: true,
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Mobile App Development",
-  //     avatar:
-  //       "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=50&h=50&fit=crop",
-  //     lastMessage: "API integration completed",
-  //     lastMessageTime: "15m ago",
-  //     unreadCount: 0,
-  //     members: 5,
-  //     isOnline: true,
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "Marketing Campaign",
-  //     avatar:
-  //       "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=50&h=50&fit=crop",
-  //     lastMessage: "Meeting scheduled for tomorrow",
-  //     lastMessageTime: "1h ago",
-  //     unreadCount: 1,
-  //     members: 12,
-  //     isOnline: false,
-  //   },
-  //   {
-  //     id: 4,
-  //     name: "Database Optimization",
-  //     avatar:
-  //       "https://images.unsplash.com/photo-1518186233392-c232efbf2373?w=50&h=50&fit=crop",
-  //     lastMessage: "Performance improved by 40%",
-  //     lastMessageTime: "3h ago",
-  //     unreadCount: 0,
-  //     members: 4,
-  //     isOnline: true,
-  //   },
-  // ]);
+  const [msgNotif, setMsgNotif] = useState([]);
+
   useEffect(() => {
     const starCountRef = ref(db, "projects/");
     onValue(starCountRef, (snapshot) => {
@@ -100,8 +55,29 @@ const Messages = () => {
       });
     });
   }, [db]);
+  useEffect(() => {
+    const starCountRef = ref(db, "messagenotification/");
+    onValue(starCountRef, (snapshot) => {
+      let arr = [];
+      snapshot.forEach((item) => {
+        const projects = item.val();
+        if (projects.reciverId == user?.uid) {
+          arr.unshift({ ...projects, id: item.key });
+        }
+        setMsgNotif(arr);
+      });
+    });
+  }, [db]);
 
-  // Sample messages data
+  const removeMsgNotif = (id) => {
+    const filtered = msgNotif.filter((n) => n.projectId === id);
+
+    // Remove from Firebase
+    filtered.forEach((m) => remove(ref(db, "messagenotification/" + m.id)));
+
+    // Update local state immediately
+    setMsgNotif(msgNotif.filter((n) => n.projectId !== id));
+  };
 
   return (
     <div className="flex h-[91vh] bg-gray-50">
@@ -125,16 +101,18 @@ const Messages = () => {
         {/* Projects List */}
         <div className="flex-1 overflow-y-auto">
           {projects.map((project) => (
-            <Link to={`/messages/${project.id}`}>
+            <Link to={`/messages/${project.id}`} key={project.id}>
               <div
-                key={project.id}
-                onClick={() => setSelectedProject(project.id)}
-                className={`p-4 cursor-pointer border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                onClick={() => removeMsgNotif(project.id)}
+                className={`p-4 relative cursor-pointer border-b border-gray-100 hover:bg-gray-50 transition-colors ${
                   selectedProject === project.id
                     ? "bg-blue-50 border-r-4 border-r-blue-600"
                     : ""
                 }`}
               >
+                {msgNotif.some((n) => n.projectId == project.id) && (
+                    <span className="w-3 h-3 bg-red-500 absolute rounded-full top-2 right-2"></span>
+                )}
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     {project?.avatar ? (
@@ -172,7 +150,7 @@ const Messages = () => {
     ${project.status === "Todo" && "bg-gray-100 text-gray-600"}
     ${project.status === "In Progress" && "bg-blue-100 text-blue-600"}
     ${project.status === "Done" && "bg-green-100 text-green-600"}
-    ${project.status === "onHold" && "bg-yellow-100 text-yellow-700"}
+    ${project.status === "On Hold" && "bg-yellow-100 text-yellow-700"}
   `}
                       >
                         {project.status}

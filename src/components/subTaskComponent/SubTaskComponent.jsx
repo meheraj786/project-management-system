@@ -222,7 +222,8 @@ const SubtasksComponent = ({ task }) => {
             key={subtask.id}
             className="group flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors relative"
           >
-            <button
+            {
+              subtask.whoCreatedId==user?.uid ?             <button
               onClick={() => handleCheckboxChange(subtask.id)}
               className="flex-shrink-0"
             >
@@ -231,7 +232,17 @@ const SubtasksComponent = ({ task }) => {
               ) : (
                 <Circle className="h-5 w-5 text-gray-400 hover:text-gray-600" />
               )}
+            </button> :             <button
+              className="flex-shrink-0"
+            >
+              {subtask.status === "checked" ? (
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              ) : (
+                <Circle className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+              )}
             </button>
+            }
+
 
             {/* Task title - editable or display */}
             {editingTask === subtask.id ? (

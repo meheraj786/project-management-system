@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getDatabase, push, ref, set, update } from "firebase/database";
+import { getDatabase, push, ref, remove, set, update } from "firebase/database";
 import toast from "react-hot-toast";
 import {
   X,
@@ -11,11 +11,14 @@ import {
   FileText,
   Target,
   AlertCircle,
+  Trash,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import moment from "moment";
+import { useNavigate } from "react-router";
 
-const ProjectUpdateModal = ({ projectData, onClose }) => {
+const ProjectUpdateModal = ({ members, projectData, onClose }) => {
+  const navigate = useNavigate();
   const user = useSelector((state) => state.userInfo.value);
   const [formData, setFormData] = useState({
     title: "",
@@ -82,6 +85,14 @@ const ProjectUpdateModal = ({ projectData, onClose }) => {
         onClose();
       })
       .catch((err) => toast.error(err.message));
+  };
+
+  const projectDeleteHandler = () => {
+    remove(ref(db, "projects/" + projectData.id)).then(() => {
+      toast.success("Project Deleted");
+      members.map((m) => remove(ref(db, "members/" + m.id)));
+      navigate("/");
+    });
   };
 
   return (
@@ -278,6 +289,14 @@ const ProjectUpdateModal = ({ projectData, onClose }) => {
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={projectDeleteHandler}
+              className="px-3 flex items-center gap-x-2 py-1 text-sm bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-colors font-medium"
+            >
+              <Trash />
+              Delete This Project
+            </button>
             <button
               type="button"
               onClick={onClose}

@@ -23,6 +23,7 @@ const Sidebar = () => {
   const { currentUser } = useContext(UserContext);
   const [projects, setProjects] = useState([]);
   const [ownProjectsId, setOwnProjectsId]= useState([])
+  const [msgNotif, setMsgNotif]= useState([])
   useEffect(() => {
       const starCountRef = ref(db, "projects/");
       onValue(starCountRef, (snapshot) => {
@@ -38,6 +39,19 @@ const Sidebar = () => {
       });
     }, [db, ownProjectsId]);
       useEffect(() => {
+        const starCountRef = ref(db, "messagenotification/");
+        onValue(starCountRef, (snapshot) => {
+          let arr = [];
+          snapshot.forEach((item) => {
+            const projects = item.val();
+            if (projects.reciverId == user?.uid) {
+              arr.unshift(item.key);
+            }
+            setMsgNotif(arr)
+          });
+        });
+      }, [db]);
+      useEffect(() => {
         const starCountRef = ref(db, "members/");
         onValue(starCountRef, (snapshot) => {
           let arr = [];
@@ -50,49 +64,15 @@ const Sidebar = () => {
           });
         });
       }, [db]);
-  // useEffect(() => {
-  //   const starCountRef = ref(db, "projects/");
-  //   onValue(starCountRef, (snapshot) => {
-  //     let arr = [];
-  //     snapshot.forEach((item) => {
-  //       const projects = item.val();
-  //       if (projects.adminId == user?.uid) {
-  //         arr.unshift({ ...projects, id: item.key });
-  //       }
-  //     });
-  //     setProjects(arr);
-  //   });
-  // }, [db]);
   const menuItems = [
     { name: "Home", icon: Home, path: "/", count: null },
-    { name: "Messages", icon: MessageCircle, path: "/messages", count: null },
+    { name: "Messages", icon: MessageCircle, path: "/messages", count: null,  notif: msgNotif.length>0 },
     { name: "Tasks", icon: CheckSquare, path: "/tasks", count: null },
-    { name: "Members", icon: Users, path: "/members", count: null },
+    { name: "Members", icon: Users, path: "/members", count: null, },
     { name: "Settings", icon: Settings, path: "/settings", count: null },
   ];
 
-  // const projects = [
-  //   {
-  //     name: 'Mobile App',
-  //     color: 'bg-green-500',
-  //     active: true
-  //   },
-  //   {
-  //     name: 'Website Redesign',
-  //     color: 'bg-yellow-500',
-  //     active: false
-  //   },
-  //   {
-  //     name: 'Design System',
-  //     color: 'bg-gray-400',
-  //     active: false
-  //   },
-  //   {
-  //     name: 'Wireframes',
-  //     color: 'bg-primary',
-  //     active: false
-  //   },
-  // ];
+console.log(msgNotif, 'notif');
 
   return (
     <div className="w-64 h-[88vh] bg-white border-r border-gray-200 flex flex-col">
@@ -109,7 +89,7 @@ const Sidebar = () => {
                       key={item.name}
                       to={item.path}
                       className={({ isActive }) =>
-                        `w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                        `w-full relative flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
                           isActive
                             ? "bg-primary/8 text-black border border-blue-200"
                             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -124,9 +104,9 @@ const Sidebar = () => {
                             }`}
                           />
                           {item.name}
-                          {item.count && (
-                            <span className="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">
-                              {item.count}
+                          {item.notif &&  (
+                            <span className="ml-auto  px-2 py-0.5 rounded-full">
+                              <span className="w-3 h-3 bg-red-500 rounded-full absolute top-2 animate-pulse"></span>
                             </span>
                           )}
                         </>
@@ -141,13 +121,14 @@ const Sidebar = () => {
                     key={item.name}
                     to={item.path}
                     className={({ isActive }) =>
-                      `w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                      `w-full flex relative items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
                         isActive
                           ? "bg-primary/8 text-black border border-blue-200"
                           : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }`
                     }
                   >
+                                           
                     {({ isActive }) => (
                       <>
                         <IconComponent
@@ -156,11 +137,11 @@ const Sidebar = () => {
                           }`}
                         />
                         {item.name}
-                        {item.count && (
-                          <span className="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">
-                            {item.count}
-                          </span>
-                        )}
+                          {item.notif &&  (
+                            <span className="ml-auto  px-2 py-0.5 rounded-full">
+                              <span className="w-3 h-3 bg-red-500 rounded-full absolute top-2 animate-pulse"></span>
+                            </span>
+                          )}
                       </>
                     )}
                   </NavLink>

@@ -13,7 +13,6 @@ export const AddTaskModal = ({ projectData, onClose }) => {
     priority: "Low",
     dueDate: "",
   });
-  console.log(projectData);
 
   const [errors, setErrors] = useState({});
 

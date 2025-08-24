@@ -18,8 +18,9 @@ import {
   Upload,
   Image,
   X,
+  Trash,
 } from "lucide-react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import {
   getDatabase,
   onValue,
@@ -63,6 +64,7 @@ const TaskDetailPage = () => {
   const [activeMenu, setActiveMenu] = useState(null);
   const [image, setImage] = useState("");
   const [imageList, setImageList] = useState([]);
+  const navigate=useNavigate()
 
   const handleEditComment = (comment) => {
     setEditComment(comment);
@@ -111,16 +113,16 @@ const TaskDetailPage = () => {
       dueDate: formData.dueDate,
     }).then(() => {
       set(push(ref(db, "activity/")), {
-          userid: user?.uid,
-          userName: user?.displayName,
-          userImage: user?.photoURL,
-          acitvityIn: "task",
-          projectId: taskDetail?.projectId,
-          action: "Updated",
-          content: `updated a Task.`,
-          time: moment().format(),
-          type: "updated",
-        });
+        userid: user?.uid,
+        userName: user?.displayName,
+        userImage: user?.photoURL,
+        acitvityIn: "task",
+        projectId: taskDetail?.projectId,
+        action: "Updated",
+        content: `updated a Task.`,
+        time: moment().format(),
+        type: "updated",
+      });
       toast.success("Updated");
       setIsOpen(false);
     });
@@ -323,6 +325,13 @@ const TaskDetailPage = () => {
       toast.success("Image Removed");
     });
   };
+    const taskRemoveHandler = () => {
+    remove(ref(db, "tasks/" + taskDetail.id)).then(() => {
+      toast.success("Task Deleted")
+      assignee.map((a)=>a.taskId==taskDetail.id ? remove(ref(db, "assignee/" + a.id)) : null)
+      navigate("/")
+    });
+  };
 
   return (
     <div className="min-h-screen font-primary bg-gray-50">
@@ -389,6 +398,14 @@ const TaskDetailPage = () => {
                       className="w-full mt-1 p-2 border rounded-lg"
                     />
                   </div>
+                  <button
+                    type="button"
+                    onClick={taskRemoveHandler}
+                    className="px-4 py-2 bg-red-200 text-red-700 rounded-lg"
+                  >
+                    <Trash />
+                    Delete This Task
+                  </button>
                 </>
               )}
 
@@ -621,13 +638,16 @@ const TaskDetailPage = () => {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                           </div>
                         </a>
-
+                        {
+                          img.whoAddId == user?.uid && 
                         <button
                           onClick={() => removeImage(img.id)}
                           className="absolute -top-2 -right-2 p-1.5 bg-white border-2 border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
+                        }
+
 
                         {/* Image index indicator */}
                         <div className="absolute bottom-1 left-1 px-2 py-0.5 bg-white/90 backdrop-blur-sm text-xs font-medium text-gray-700 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">

@@ -179,32 +179,6 @@ const ProjectProfile = () => {
     });
   }, [db, id, projectData]);
 
-  // const recentActivities = [
-  //   {
-  //     initial: "A",
-  //     user: "Someone",
-  //     action: "Like",
-  //     target: "Proj",
-  //     time: "12;20",
-  //     type: "upload",
-  //   },
-  //   {
-  //     initial: "A",
-  //     user: "Someone",
-  //     action: "Like",
-  //     target: "Proj",
-  //     time: "12;20",
-  //     type: "completed",
-  //   },
-  //   {
-  //     initial: "A",
-  //     user: "Someone",
-  //     action: "Like",
-  //     target: "Proj",
-  //     time: "12;20",
-  //     type: "created",
-  //   },
-  // ];
 
   const renderAvatar = (member) => (
     <div
@@ -372,6 +346,7 @@ const ProjectProfile = () => {
       {updateProjectModal && (
         <ProjectUpdateModal
           projectData={projectData}
+          members={members}
           onClose={() => setUpdateProjectModal(false)}
         />
       )}
