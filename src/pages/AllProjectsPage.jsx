@@ -121,6 +121,8 @@ const AllProjectsPage = () => {
     switch (priority) {
       case "High":
         return "bg-red-100 text-red-800 border-red-200";
+      case "Critical":
+        return "bg-red-200 text-red-900 border-red-300";
       case "Medium":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "Low":
@@ -299,6 +301,7 @@ const AllProjectsPage = () => {
               <option value="High">High</option>
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>
+              <option value="Critical">Critical</option>
             </select>
 
             {/* Stats */}
