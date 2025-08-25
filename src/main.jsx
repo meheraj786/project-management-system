@@ -20,6 +20,7 @@ import DummyDashboard from "./App.jsx";
 import AllProjectsPage from "./pages/AllProjectsPage.jsx";
 import Messages from "./pages/Messages.jsx";
 import Conversation from "./layouts/Conversation.jsx";
+import Todos from "./pages/Todos.jsx";
 
 
 const router = createBrowserRouter([
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
           {
             path: '/project/:id',
             element: <ProjectProfile />,
+          },
+          {
+            path: '/todos',
+            element: <Todos />,
           },
           {
             path: '/members',

@@ -11,6 +11,7 @@ const CustomLoader = () => {
               {" "}
               <img className="w-[54px] rotate-stop-go" src={smallLogo} alt="" /> Collab
               <span className="text-primary">rix.</span>
+              <span className="text-sm mb-2">Beta</span>
             </h1>
     </div>
   )

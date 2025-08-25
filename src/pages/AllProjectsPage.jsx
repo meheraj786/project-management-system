@@ -250,7 +250,7 @@ const AllProjectsPage = () => {
               Manage and track all your projects
             </p>
           </div>
-          {currentUser.accountType == "admin" && (
+          {currentUser?.accountType == "admin" && (
             <button
               onClick={() => setProjectCreationPop(true)}
               className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"

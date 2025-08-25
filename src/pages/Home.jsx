@@ -29,6 +29,7 @@ import Flex from "../layouts/Flex";
 import { Link } from "react-router";
 import ProjectStatusChart from "../components/projectStatusChart/ProjectStatusChart";
 import CustomLoader from "../layouts/CustomLoader";
+import moment from "moment";
 
 const Home = () => {
   const user = useSelector((state) => state.userInfo.value);
@@ -38,8 +39,8 @@ const Home = () => {
   const [projectMembers, setProjectMembers] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [ownProjectsId, setOwnProjectsId] = useState([]);
-  const [ownTaskId, setOwnTaskId]= useState([])
-  const [loading, setLoading]= useState(true)
+  const [ownTaskId, setOwnTaskId] = useState([]);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const starCountRef = ref(db, "tasks/");
     onValue(starCountRef, (snapshot) => {
@@ -79,7 +80,7 @@ const Home = () => {
         }
       });
       setProjects(arr);
-      setLoading(false)
+      setLoading(false);
     });
   }, [db, ownProjectsId]);
   useEffect(() => {
@@ -101,7 +102,7 @@ const Home = () => {
       let arr = [];
       snapshot.forEach((item) => {
         const assignee = item.val();
-        const assigneeId=item.key
+        const assigneeId = item.key;
         if (assignee.assigneeId == user?.uid) {
           arr.unshift(assignee.taskId);
         }
@@ -159,9 +160,7 @@ const Home = () => {
     Critical: "bg-red-100 text-red-600",
   };
 
-  if (loading) return <CustomLoader/>
-
-
+  if (loading) return <CustomLoader />;
 
   return (
     <div className="min-h-screen font-primary bg-gray-50 p-6">
@@ -215,10 +214,8 @@ const Home = () => {
             </div>
           </div>
 
-          {currentUser.accountType == "admin" && (
+          {currentUser?.accountType == "admin" && (
             <div className="flex items-center space-x-3 mt-6 md:mt-0">
-
-
               <button
                 onClick={() => setProjectModal(true)}
                 className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-all duration-200 flex items-center space-x-2 shadow-md"
@@ -229,7 +226,7 @@ const Home = () => {
             </div>
           )}
         </div>
-        <ProjectStatusChart projects={projects} tasks={tasks}/>
+        <ProjectStatusChart projects={projects} tasks={tasks} />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -409,9 +406,50 @@ const Home = () => {
                             {/* {project.tasks.completed}/{project.tasks.total} tasks */}
                           </span>
                         </div>
-                        <span className="text-sm text-gray-500">
-                          Due: {project.endDate}
-                        </span>
+
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-500">
+                            Due:{" "}
+                            {project?.endDate
+                              ? moment(project.endDate).format("DD MMM YYYY")
+                              : "—"}
+                          </span>
+
+                          {project?.endDate && (
+                            <span
+                              className={`text-xs font-medium ${
+                                moment(project.endDate)
+                                  .startOf("day")
+                                  .diff(moment().startOf("day"), "days") > 0
+                                  ? "text-green-600"
+                                  : moment(project.endDate)
+                                      .startOf("day")
+                                      .diff(moment().startOf("day"), "days") ===
+                                    0
+                                  ? "text-red-500"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {(() => {
+                                const daysDiff = moment(project.endDate)
+                                  .startOf("day")
+                                  .diff(moment().startOf("day"), "days");
+
+                                if (daysDiff > 0) {
+                                  return `${daysDiff} day${
+                                    daysDiff !== 1 ? "s" : ""
+                                  } left`;
+                                } else if (daysDiff === 0) {
+                                  return "Due today";
+                                } else {
+                                  return `Overdue by ${Math.abs(daysDiff)} day${
+                                    Math.abs(daysDiff) !== 1 ? "s" : ""
+                                  }`;
+                                }
+                              })()}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* <div className="w-full bg-gray-200 rounded-full h-2">
@@ -470,9 +508,52 @@ const Home = () => {
                             >
                               {task?.priority}
                             </span>
-                            <span className="text-xs text-gray-500">
-                              {task?.dueDate}
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-xs text-gray-500">
+                                {task?.dueDate
+                                  ? moment(task.dueDate).format("DD MMM YYYY")
+                                  : "—"}
+                              </span>
+
+                              {task?.dueDate && (
+                                <span
+                                  className={`text-xs font-medium ${
+                                    moment(task.dueDate)
+                                      .startOf("day")
+                                      .diff(moment().startOf("day"), "days") > 0
+                                      ? "text-green-600"
+                                      : moment(task.dueDate)
+                                          .startOf("day")
+                                          .diff(
+                                            moment().startOf("day"),
+                                            "days"
+                                          ) === 0
+                                      ? "text-red-500"
+                                      : "text-red-600"
+                                  }`}
+                                >
+                                  {(() => {
+                                    const daysDiff = moment(task.dueDate)
+                                      .startOf("day")
+                                      .diff(moment().startOf("day"), "days");
+
+                                    if (daysDiff > 0) {
+                                      return `${daysDiff} day${
+                                        daysDiff !== 1 ? "s" : ""
+                                      } left`;
+                                    } else if (daysDiff === 0) {
+                                      return "Due today";
+                                    } else {
+                                      return `Overdue by ${Math.abs(
+                                        daysDiff
+                                      )} day${
+                                        Math.abs(daysDiff) !== 1 ? "s" : ""
+                                      }`;
+                                    }
+                                  })()}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -487,8 +568,6 @@ const Home = () => {
             </div>
           </div>
         </div>
-
-
 
         {/* Quick Actions */}
         {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

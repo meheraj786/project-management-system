@@ -67,7 +67,7 @@ const Sidebar = () => {
   const menuItems = [
     { name: "Home", icon: Home, path: "/", count: null },
     { name: "Messages", icon: MessageCircle, path: "/messages", count: null,  notif: msgNotif.length>0 },
-    { name: "Tasks", icon: CheckSquare, path: "/tasks", count: null },
+    { name: "Todos", icon: CheckSquare, path: "/todos", count: null },
     { name: "Members", icon: Users, path: "/members", count: null, },
     { name: "Settings", icon: Settings, path: "/settings", count: null },
   ];
@@ -79,7 +79,7 @@ console.log(msgNotif, 'notif');
       {/* Navigation Menu */}
       <div className="flex-1 px-4 py-6">
         <nav className="space-y-1">
-          {currentUser.accountType === "member"
+          {currentUser?.accountType === "member"
             ? menuItems
                 .filter((m) => m.name !== "Members")
                 .map((item) => {

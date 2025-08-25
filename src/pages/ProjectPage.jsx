@@ -474,7 +474,7 @@ const ProjectProfile = () => {
           {/* Members Section */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              {currentUser.accountType == "admin" && (
+              {currentUser?.accountType == "admin" && (
                 <button onClick={() => setMembersPop(true)}>
                   <span className="text-primary text-sm font-medium">
                     Manage Members
@@ -498,8 +498,7 @@ const ProjectProfile = () => {
           </div>
         </div>
 
-        {/* Project Info Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {/* Status */}
           <div className="flex items-center space-x-2">
             <Target className="h-4 w-4 text-gray-500" />
@@ -533,7 +532,8 @@ const ProjectProfile = () => {
                   ? "bg-yellow-100 text-yellow-800 border-yellow-200"
                   : projectData?.priority === "Low"
                   ? "bg-green-100 text-green-800 border-green-200"
-                  : "bg-gray-100 text-gray-800 border-gray-200"
+                  : projectData?.priority === "Critical"
+                  ? "bg-red-100 text-red-800 border-red-200" : "bg-gray-100 text-gray-800 border-gray-200"
               }`}
             >
               {projectData?.priority || "Not set"}
@@ -569,10 +569,10 @@ const ProjectProfile = () => {
                     const end = moment(projectData.endDate);
                     const diffDays = end.diff(today, "days");
 
-                    if (diffDays < 0) return "text-red-600"; // overdue
-                    if (diffDays === 0) return "text-orange-600"; // today
-                    if (diffDays <= 7) return "text-yellow-600"; // within 7 days
-                    return "text-green-600"; // more than 7 days
+                    if (diffDays < 0) return "text-red-600"; 
+                    if (diffDays === 0) return "text-orange-600"; 
+                    if (diffDays <= 7) return "text-yellow-600"; 
+                    return "text-green-600"; 
                   })()}`}
                 >
                   {(() => {
@@ -638,7 +638,7 @@ const ProjectProfile = () => {
       {/* Filters and Actions */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          {currentUser.accountType == "admin" && (
+          {currentUser?.accountType == "admin" && (
             <button
               onClick={() => setUpdateProjectModal(true)}
               className="flex items-center space-x-2 px-4 py-2 border border-primary group hover:bg-primary hover:text-white rounded-lg bg-white  transition-colors"
@@ -660,7 +660,7 @@ const ProjectProfile = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          {currentUser.accountType == "admin" && (
+          {currentUser?.accountType == "admin" && (
             <>
               {projectData?.status == "Done" ? (
                 <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg  transition-colors">
@@ -683,7 +683,7 @@ const ProjectProfile = () => {
       </div>
 
       {/* Kanban Board */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 min-h-[240px] md:grid-cols-3 gap-6">
         {/* To Do Column */}
         <div className="bg-gray-100 rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">

@@ -382,7 +382,7 @@ const TaskDetailPage = () => {
                 </select>
               </div>
 
-              {currentUser.accountType == "admin" && (
+              {currentUser?.accountType == "admin" && (
                 <>
                   {/* Priority */}
                   <div>
@@ -846,7 +846,7 @@ const TaskDetailPage = () => {
               <div className="flex items-center justify-between mb-4">
                 {" "}
                 <h3 className="font-semibold text-gray-800">Assignees</h3>{" "}
-                {currentUser.accountType == "admin" && (
+                {currentUser?.accountType == "admin" && (
                   <>
                     {taskDetail?.status == "Completed" ? (
                       <button className="text-primary/60 text-xs">
@@ -878,7 +878,7 @@ const TaskDetailPage = () => {
                           {member.assigneeRole}
                         </p>
                       </div>
-                      {currentUser.accountType == "admin" && (
+                      {currentUser?.accountType == "admin" && (
                         <button
                           onClick={() => toggleDropdown(member.id)}
                           className="text-gray-400 hover:text-gray-600"

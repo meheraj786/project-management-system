@@ -11,6 +11,7 @@ const Logo = ({ className }) => {
         {" "}
         <img className="w-[34px]" src={smallLogo} alt="" /> Collab
         <span className="text-primary">rix.</span>
+        <span className="text-xs mb-2">Beta</span>
       </h1>
     </Link>
   );

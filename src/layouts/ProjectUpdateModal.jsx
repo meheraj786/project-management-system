@@ -176,7 +176,7 @@ const ProjectUpdateModal = ({ members, projectData, onClose }) => {
                 <option value="Low">🟢 Low</option>
                 <option value="Medium">🟡 Medium</option>
                 <option value="High">🔴 High</option>
-                <option value="High">🔴 Critical</option>
+                <option value="Critical">🔴 Critical</option>
               </select>
             </div>
 
@@ -197,7 +197,7 @@ const ProjectUpdateModal = ({ members, projectData, onClose }) => {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    startDate: moment(e.target.value).format(),
+                    startDate: new Date(e.target.value).toISOString(),
                   })
                 }
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
@@ -221,7 +221,7 @@ const ProjectUpdateModal = ({ members, projectData, onClose }) => {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    endDate: moment(e.target.value).format(),
+                    endDate: new Date(e.target.value).toISOString(),
                   })
                 }
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
